@@ -2,54 +2,25 @@ import { useEffect, useRef } from 'react';
 
 const BAR_COUNT = 32;
 
-export default function AudioVisualizer({ audioRef, isPlaying, accent = '#22c55e' }) {
+export default function AudioVisualizer({ isPlaying, accent = '#22c55e' }) {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
-  const analyserRef = useRef(null);
-  const audioCtxRef = useRef(null);
-  const sourceRef = useRef(null);
   const rafRef = useRef(null);
-  const dataRef = useRef(new Uint8Array(BAR_COUNT));
 
   useEffect(() => {
-    const audio = audioRef.current;
     const canvas = canvasRef.current;
-    if (!audio || !canvas) return;
-
-    const setup = () => {
-      if (audioCtxRef.current) return;
-
-      try {
-        const ctx = new AudioContext();
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 128;
-        analyser.smoothingTimeConstant = 0.75;
-
-        const source = ctx.createMediaElementSource(audio);
-        source.connect(analyser);
-        analyser.connect(ctx.destination);
-
-        audioCtxRef.current = ctx;
-        analyserRef.current = analyser;
-        sourceRef.current = source;
-        dataRef.current = new Uint8Array(analyser.frequencyBinCount);
-      } catch {
-        // Element may already be wired in StrictMode remount
-      }
-    };
+    if (!canvas) return;
 
     const draw = () => {
-      const analyser = analyserRef.current;
       const canvasEl = canvasRef.current;
-      if (!analyser || !canvasEl) return;
+      if (!canvasEl) return;
 
       const c = canvasEl.getContext('2d');
       if (!c) return;
       ctxRef.current = c;
 
       const { width, height } = canvasEl;
-      const data = dataRef.current;
-      analyser.getByteFrequencyData(data);
+      const time = performance.now() / 180;
 
       c.clearRect(0, 0, width, height);
 
@@ -57,7 +28,9 @@ export default function AudioVisualizer({ audioRef, isPlaying, accent = '#22c55e
       const barWidth = (width - gap * (BAR_COUNT - 1)) / BAR_COUNT;
 
       for (let i = 0; i < BAR_COUNT; i++) {
-        const value = data[i] / 255;
+        const value = isPlaying
+          ? 0.2 + (Math.sin(time + i * 0.72) + 1) * 0.32
+          : 0.12;
         const barHeight = Math.max(4, value * height * 0.92);
         const x = i * (barWidth + gap);
         const y = (height - barHeight) / 2;
@@ -78,9 +51,9 @@ export default function AudioVisualizer({ audioRef, isPlaying, accent = '#22c55e
     };
 
     if (isPlaying) {
-      setup();
-      audioCtxRef.current?.resume();
       rafRef.current = requestAnimationFrame(draw);
+    } else {
+      draw();
     }
 
     return () => {
@@ -89,7 +62,7 @@ export default function AudioVisualizer({ audioRef, isPlaying, accent = '#22c55e
         rafRef.current = null;
       }
     };
-  }, [audioRef, isPlaying, accent]);
+  }, [isPlaying, accent]);
 
   return (
     <canvas
