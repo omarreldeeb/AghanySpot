@@ -53,9 +53,11 @@ export function useAudioPlayer(src) {
 
       audio
         .play()
-        .then(() => {
-          if (CLIP_DURATIONS[step] <= 0.1 && audio.readyState > 0) {
+        .then(async () => {
+          if (CLIP_DURATIONS[step] <= 0.1 && audio.currentTime > 0.02) {
+            audio.pause();
             audio.currentTime = 0;
+            await audio.play();
           }
           setIsPlaying(true);
           if (!unlocked) {
