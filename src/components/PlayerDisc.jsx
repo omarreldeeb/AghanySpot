@@ -119,7 +119,7 @@ export default function PlayerDisc({
           title="Repeat this clip"
         >
           <Repeat size={15} />
-          <span>Loop clip</span>
+          <span>Loop</span>
         </button>
       </div>
     </div>

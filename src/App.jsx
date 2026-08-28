@@ -181,6 +181,7 @@ export default function App() {
 
   const handleSkip = () => {
     if (gameStatus !== 'PLAYING') return;
+    pause();
     // advance the clip step but do not record skips in the visible guess history
     if (step + 1 >= CLIP_DURATIONS.length) {
       setGameStatus('LOST');
