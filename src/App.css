@@ -842,6 +842,7 @@
     grid-template-columns: 1fr;
     padding: 16px;
     gap: 12px;
+    width: 100%;
   }
 
   .sidebar {
@@ -867,6 +868,80 @@
 
   .player-progress {
     max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .shell {
+    margin: 0 auto;
+    padding: 12px 10px 20px;
+  }
+
+  .header__badge {
+    margin-bottom: 10px;
+  }
+
+  .header__title {
+    font-size: 1.8rem;
+  }
+
+  .header__subtitle {
+    font-size: 14px;
+  }
+
+  .card {
+    width: 100%;
+    padding: 12px;
+    gap: 14px;
+    overflow: hidden;
+  }
+
+  .top-row {
+    gap: 12px;
+    width: 100%;
+  }
+
+  .era-tabs,
+  .difficulty-badges {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .era-pill,
+  .badge {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 9px 10px;
+    text-align: center;
+  }
+
+  .era-pill {
+    font-size: 12px;
+  }
+
+  .badge {
+    font-size: 12px;
+  }
+
+  .player-section {
+    gap: 14px;
+  }
+
+  .disc-wrap {
+    width: 128px;
+    height: 128px;
+  }
+
+  .search-bar__row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-bar__skip {
+    min-height: 42px;
+    justify-content: center;
   }
 }
 
