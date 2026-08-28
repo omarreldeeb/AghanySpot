@@ -10,14 +10,20 @@ export default function AudioVisualizer({ isPlaying, accent = '#22c55e' }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    ctxRef.current = context;
+
+    const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, accent);
+    gradient.addColorStop(1, `${accent}44`);
 
     const draw = () => {
       const canvasEl = canvasRef.current;
       if (!canvasEl) return;
 
-      const c = canvasEl.getContext('2d');
+      const c = ctxRef.current;
       if (!c) return;
-      ctxRef.current = c;
 
       const { width, height } = canvasEl;
       const time = performance.now() / 180;
@@ -26,6 +32,7 @@ export default function AudioVisualizer({ isPlaying, accent = '#22c55e' }) {
 
       const gap = 3;
       const barWidth = (width - gap * (BAR_COUNT - 1)) / BAR_COUNT;
+      c.fillStyle = gradient;
 
       for (let i = 0; i < BAR_COUNT; i++) {
         const value = isPlaying
@@ -35,11 +42,6 @@ export default function AudioVisualizer({ isPlaying, accent = '#22c55e' }) {
         const x = i * (barWidth + gap);
         const y = (height - barHeight) / 2;
 
-        const gradient = c.createLinearGradient(0, y, 0, y + barHeight);
-        gradient.addColorStop(0, accent);
-        gradient.addColorStop(1, `${accent}44`);
-
-        c.fillStyle = gradient;
         c.beginPath();
         c.roundRect(x, y, barWidth, barHeight, 2);
         c.fill();

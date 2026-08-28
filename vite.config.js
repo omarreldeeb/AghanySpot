@@ -60,8 +60,13 @@ function songsPlugin() {
       fs.mkdirSync(distSongs, { recursive: true })
 
       for (const file of fs.readdirSync(songsDir)) {
-        if (!file.toLowerCase().endsWith('.mp3')) continue
-        fs.copyFileSync(path.join(songsDir, file), path.join(distSongs, file))
+        const source = path.join(songsDir, file)
+        const destination = path.join(distSongs, file)
+        if (file.toLowerCase().endsWith('.mp3')) {
+          fs.copyFileSync(source, destination)
+        } else if (file === 'Covers') {
+          fs.cpSync(source, destination, { recursive: true })
+        }
       }
     },
   }

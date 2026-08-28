@@ -1,5 +1,6 @@
 // Auto-generated covers manifest. Contains filenames found in /Songs/Covers
-const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`;
+const assetPath = (path) =>
+  `${import.meta.env.BASE_URL}${path.split('/').map(encodeURIComponent).join('/')}`;
 
 export const COVERS = [
   assetPath('Songs/Covers/Dary Ya Alby - Hamza Namira.jpg'),

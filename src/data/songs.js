@@ -1,8 +1,9 @@
 // NOTE: When adding songs, please verify the correct English and Arabic
 // spellings (title and artist) and punctuation. Fill `arabicTitle` and
 // `arabicArtist` for every entry so the UI shows accurate metadata.
-const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`;
-const songSrc = (filename) => assetPath(`Songs/${encodeURIComponent(filename)}`);
+const assetPath = (path) =>
+  `${import.meta.env.BASE_URL}${path.split('/').map(encodeURIComponent).join('/')}`;
+const songSrc = (filename) => assetPath(`Songs/${filename}`);
 
 export const EGYPTIAN_SONGS = [
   {
