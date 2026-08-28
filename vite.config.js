@@ -57,14 +57,19 @@ function songsPlugin() {
       }
 
       const distSongs = path.resolve(rootDir, 'dist/Songs')
-      fs.cpSync(songsDir, distSongs, { recursive: true })
+      fs.mkdirSync(distSongs, { recursive: true })
+
+      for (const file of fs.readdirSync(songsDir)) {
+        if (!file.toLowerCase().endsWith('.mp3')) continue
+        fs.copyFileSync(path.join(songsDir, file), path.join(distSongs, file))
+      }
     },
   }
 }
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: './',
+  base: '/AghanySpot/',
   plugins: [react(), songsPlugin()],
   server: {
     host: true,
