@@ -7,8 +7,6 @@
     "dev": "vite",
     "dev:host": "vite --host",
     "build": "vite build && if [ -d Songs ]; then cp -R Songs dist/Songs; fi",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist",
     "lint": "eslint .",
     "preview": "vite preview"
   },
