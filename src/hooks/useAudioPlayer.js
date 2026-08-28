@@ -17,24 +17,7 @@ export function useAudioPlayer(src) {
     }
   }, []);
 
-  const seekToStart = useCallback((audio, reload = false) => {
-    if (reload) {
-      return new Promise((resolve) => {
-        let settled = false;
-        const finish = () => {
-          if (settled) return;
-          settled = true;
-          audio.removeEventListener('canplay', finish);
-          resolve();
-        };
-
-        audio.addEventListener('canplay', finish, { once: true });
-        audio.load();
-        if (audio.readyState >= 3) window.setTimeout(finish, 0);
-        window.setTimeout(finish, 500);
-      });
-    }
-
+  const seekToStart = useCallback((audio) => {
     if (audio.currentTime === 0) return Promise.resolve();
 
     return new Promise((resolve) => {
@@ -98,7 +81,7 @@ export function useAudioPlayer(src) {
       const playRequest = ++playRequestRef.current;
       setIsPlaying(true);
 
-      seekToStart(audio, duration === 0.1).then(() => {
+      seekToStart(audio).then(() => {
         if (playRequest !== playRequestRef.current) return;
         startCutoffLoop(playbackDuration);
         audio.play().catch(() => {
