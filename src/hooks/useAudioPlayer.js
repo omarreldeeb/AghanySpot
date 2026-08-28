@@ -7,6 +7,7 @@ export function useAudioPlayer(src) {
   const limitRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
+  const [playbackId, setPlaybackId] = useState(0);
 
   const stopCutoffLoop = useCallback(() => {
     if (rafRef.current != null) {
@@ -46,6 +47,7 @@ export function useAudioPlayer(src) {
       if (!audio) return;
 
       stopCutoffLoop();
+      setPlaybackId((id) => id + 1);
       if (audio.readyState > 0) audio.currentTime = 0;
 
       audio
@@ -67,6 +69,7 @@ export function useAudioPlayer(src) {
 
     stopCutoffLoop();
     limitRef.current = null;
+    setPlaybackId((id) => id + 1);
     if (audio.readyState > 0) audio.currentTime = 0;
 
     audio
@@ -114,6 +117,7 @@ export function useAudioPlayer(src) {
     audioRef,
     isPlaying,
     unlocked,
+    playbackId,
     playSnippet,
     playFull,
     pause,

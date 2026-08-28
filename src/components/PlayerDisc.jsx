@@ -11,11 +11,20 @@ export default function PlayerDisc({
   onPlay,
   onPause,
   step,
+  playbackId,
 }) {
   const [progress, setProgress] = useState(0);
   const rafRef = useRef(null);
   const fillRef = useRef(null);
   const visualStartRef = useRef(null);
+
+  useEffect(() => {
+    visualStartRef.current = performance.now();
+    if (fillRef.current) {
+      fillRef.current.style.width = '0%';
+      fillRef.current.style.boxShadow = 'none';
+    }
+  }, [playbackId]);
 
   useEffect(() => {
     // reset progress when step changes or unlocked state toggles
@@ -68,11 +77,6 @@ export default function PlayerDisc({
   }, [isPlaying, unlocked, clipDuration, audioRef]);
 
   const handlePlay = () => {
-    visualStartRef.current = performance.now();
-    if (fillRef.current) {
-      fillRef.current.style.width = '0%';
-      fillRef.current.style.boxShadow = 'none';
-    }
     onPlay();
   };
 

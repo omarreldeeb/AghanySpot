@@ -57,12 +57,7 @@ function songsPlugin() {
       }
 
       const distSongs = path.resolve(rootDir, 'dist/Songs')
-      fs.mkdirSync(distSongs, { recursive: true })
-
-      for (const file of fs.readdirSync(songsDir)) {
-        if (!file.toLowerCase().endsWith('.mp3')) continue
-        fs.copyFileSync(path.join(songsDir, file), path.join(distSongs, file))
-      }
+      fs.cpSync(songsDir, distSongs, { recursive: true })
     },
   }
 }

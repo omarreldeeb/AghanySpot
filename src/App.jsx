@@ -85,7 +85,7 @@ export default function App() {
 
   const currentSong = activePool[songIndex] || EGYPTIAN_SONGS[0];
 
-  const { audioRef, isPlaying, unlocked, playSnippet, playFull, pause, unlock, reset } =
+  const { audioRef, isPlaying, unlocked, playbackId, playSnippet, playFull, pause, unlock, reset } =
     useAudioPlayer(currentSong?.src);
 
   // keep audio volume in sync
@@ -278,6 +278,7 @@ export default function App() {
               onPlay={handlePlay}
               onPause={pause}
               step={step}
+              playbackId={playbackId}
             />
 
             <GuessHistory guesses={guesses} />
