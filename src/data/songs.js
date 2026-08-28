@@ -14,6 +14,7 @@ export const EGYPTIAN_SONGS = [
     era: '2000s',
     difficulty: 'Easy',
     src: songSrc('02.Tamally_Maak.mp3'),
+    cover: assetPath('Songs/Covers/Tamaly maak.jpeg'),
     accent: '#22c55e',
   },
   {
@@ -25,6 +26,7 @@ export const EGYPTIAN_SONGS = [
     era: '2020s',
     difficulty: 'Hard',
     src: songSrc('EL BAKHT.mp3'),
+    cover: assetPath('Songs/Covers/EL BAKHT.jpeg'),
     accent: '#a855f7',
   },
   {
@@ -36,6 +38,7 @@ export const EGYPTIAN_SONGS = [
     era: '2010s',
     difficulty: 'Medium',
     src: songSrc('Yalmidan.mp3'),
+    cover: assetPath('Songs/Covers/Yalmidan.jpeg'),
     accent: '#f59e0b',
   },
   {
@@ -47,6 +50,7 @@ export const EGYPTIAN_SONGS = [
     era: '2010s',
     difficulty: 'Easy',
     src: songSrc('3 DAQAT.mp3'),
+    cover: assetPath('Songs/Covers/3 DAQAT.jpeg'),
     accent: '#ec4899',
   },
   {
@@ -58,6 +62,7 @@ export const EGYPTIAN_SONGS = [
     era: '1900s',
     difficulty: 'Impossible',
     src: songSrc('Enta 3omri.mp3'),
+    cover: assetPath('Songs/Covers/Enta umri.jpeg'),
     accent: '#6366f1',
   },
   {
@@ -69,6 +74,7 @@ export const EGYPTIAN_SONGS = [
     era: '2020s',
     difficulty: 'Expert',
     src: songSrc('Control Marawan Pablo.mp3'),
+    cover: assetPath('Songs/Covers/Control Marawan Pablo.jpg'),
     accent: '#14b8a6',
   },
   {
@@ -80,6 +86,7 @@ export const EGYPTIAN_SONGS = [
     era: '2020s',
     difficulty: 'Hard',
     src: songSrc('Adrenalin hamaki.mp3'),
+    cover: assetPath('Songs/Covers/Adrenalina.jpeg'),
     accent: '#ef4444',
   },
   {

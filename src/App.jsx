@@ -133,6 +133,7 @@ export default function App() {
       {
         text: `${selectedSong.title} — ${selectedSong.artist}`,
         correct: isCorrect,
+        duration: CLIP_DURATIONS[step],
       },
     ]);
     setQuery('');

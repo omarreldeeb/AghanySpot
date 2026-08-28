@@ -8,7 +8,7 @@ export default function GuessHistory({ guesses }) {
   return (
     <div className="guess-history">
       {guesses.map((guess, idx) => {
-        const dur = CLIP_DURATIONS[idx];
+        const dur = guess.duration ?? CLIP_DURATIONS[idx];
         const label = dur ? (dur < 1 ? `${dur.toFixed(1)}s` : `${dur}s`) : '';
         return (
           <div key={idx} className={`guess-row guess-row--filled`}>
