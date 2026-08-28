@@ -26,7 +26,7 @@ export default function SearchBar({
         </div>
         <button type="button" className="search-bar__skip" onClick={onSkip}>
           <SkipForward size={16} />
-          <span>Skip</span>
+          <span>{step === CLIP_DURATIONS.length - 1 ? 'Give up' : 'Skip'}</span>
         </button>
       </div>
 

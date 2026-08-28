@@ -48,11 +48,15 @@ export function useAudioPlayer(src) {
 
       stopCutoffLoop();
       setPlaybackId((id) => id + 1);
+      audio.pause();
       if (audio.readyState > 0) audio.currentTime = 0;
 
       audio
         .play()
         .then(() => {
+          if (CLIP_DURATIONS[step] <= 0.1 && audio.readyState > 0) {
+            audio.currentTime = 0;
+          }
           setIsPlaying(true);
           if (!unlocked) {
             startCutoffLoop(CLIP_DURATIONS[step]);
