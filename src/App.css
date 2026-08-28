@@ -17,6 +17,32 @@
   color: var(--text);
 }
 
+.app--light {
+  --bg: #f4f7f5;
+  --surface: #ffffff;
+  --surface-elevated: #eef3ef;
+  --border: rgba(15, 23, 42, 0.12);
+  --text: #17201b;
+  --text-muted: #5e6b63;
+  --accent-glow: rgba(22, 163, 74, 0.24);
+}
+
+.app--light .header__title {
+  background: linear-gradient(135deg, #17201b 30%, #5e6b63);
+}
+
+.app--light .disc {
+  background: linear-gradient(145deg, #dfe7e1 0%, #aab9ae 60%, #cbd7ce 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset,
+    0 16px 40px rgba(15, 23, 42, 0.18);
+}
+
+.app--light .clip-progress__bar,
+.app--light .player-progress {
+  background: rgba(15, 23, 42, 0.1);
+}
+
 .app__bg {
   position: fixed;
   inset: 0;
@@ -188,7 +214,35 @@
 
 /* Header */
 .header {
+  position: relative;
   text-align: center;
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-elevated);
+  color: var(--text);
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--accent);
+  transform: rotate(12deg) scale(1.05);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .header__badge {

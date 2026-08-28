@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Moon, Sun } from 'lucide-react';
 import { EGYPTIAN_SONGS, CLIP_DURATIONS } from './data/songs';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
 import ClipProgress from './components/ClipProgress';
@@ -40,6 +41,22 @@ export default function App() {
   const [volume, setVolume] = useState(1);
   const [accent, setAccent] = useState(() => ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)]);
   const [loopEnabled, setLoopEnabled] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      return window.localStorage.getItem('aghanyspot-theme') !== 'light';
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.style.colorScheme = isDarkMode ? 'dark' : 'light';
+    try {
+      window.localStorage.setItem('aghanyspot-theme', isDarkMode ? 'dark' : 'light');
+    } catch {
+      // Continue without persistence when storage is unavailable.
+    }
+  }, [isDarkMode]);
 
   const filteredSongs = useMemo(() => {
     return EGYPTIAN_SONGS.filter((s) => {
@@ -223,7 +240,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="app">
+    <div className={`app ${isDarkMode ? 'app--dark' : 'app--light'}`}>
       <div className="app__bg" aria-hidden="true" />
       <div className="app__glow app__glow--left" aria-hidden="true" />
       <div className="app__glow app__glow--right" aria-hidden="true" />
@@ -258,6 +275,16 @@ export default function App() {
 
         <section className="stage">
           <header className="header">
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={() => setIsDarkMode((darkMode) => !darkMode)}
+              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-pressed={!isDarkMode}
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
             <div className="header__badge">🇪🇬 Egyptian Music</div>
             <h1 className="header__title">AghanySpot</h1>
             <p className="header__subtitle">Guess the Song</p>
