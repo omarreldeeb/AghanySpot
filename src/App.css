@@ -677,6 +677,34 @@
   font-weight: 700;
 }
 
+.game-result__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.game-result__play {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--accent);
+  color: #052e16;
+  cursor: pointer;
+  box-shadow: 0 0 16px var(--accent-glow);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.game-result__play:hover {
+  filter: brightness(1.08);
+  transform: scale(1.06);
+}
+
 .game-result__arabic {
   font-size: 1rem;
   color: var(--text-muted);

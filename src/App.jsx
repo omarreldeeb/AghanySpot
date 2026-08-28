@@ -307,7 +307,8 @@ export default function App() {
                 status={gameStatus}
                 song={currentSong}
                 onNext={resetGame}
-                onReplayFull={playFull}
+                onReplayFull={() => playFull(gameStatus === 'LOST')}
+                onPause={pause}
                 isPlaying={isPlaying}
               />
             )}

@@ -1,8 +1,8 @@
-import { RefreshCw } from 'lucide-react';
+import { Pause, Play, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { COVERS, normalizeName } from '../data/covers';
 
-export default function GameResult({ status, song, onNext, onReplayFull, isPlaying }) {
+export default function GameResult({ status, song, onNext, onReplayFull, onPause, isPlaying }) {
   const won = status === 'WON';
   const [cover, setCover] = useState(null);
 
@@ -117,7 +117,17 @@ export default function GameResult({ status, song, onNext, onReplayFull, isPlayi
         <div className="game-result-body">
           <h3 className="game-result-status">{won ? 'Correct!' : 'Out of guesses'}</h3>
           <div className="game-result__answer">
-            <div className="game-result__title">{song.title}</div>
+            <div className="game-result__title-row">
+              <div className="game-result__title">{song.title}</div>
+              <button
+                type="button"
+                className="game-result__play"
+                onClick={isPlaying ? onPause : onReplayFull}
+                aria-label={isPlaying ? 'Pause song' : 'Play song'}
+              >
+                {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+              </button>
+            </div>
             <div className="game-result__artist">{song.artist}</div>
             <div className="game-result__arabic" dir="rtl">{song.arabicTitle}</div>
           </div>

@@ -63,14 +63,14 @@ export function useAudioPlayer(src) {
     [unlocked, startCutoffLoop, stopCutoffLoop],
   );
 
-  const playFull = useCallback(() => {
+  const playFull = useCallback((restart = true) => {
     const audio = audioRef.current;
     if (!audio) return;
 
     stopCutoffLoop();
     limitRef.current = null;
     setPlaybackId((id) => id + 1);
-    if (audio.readyState > 0) audio.currentTime = 0;
+    if (restart && audio.readyState > 0) audio.currentTime = 0;
 
     audio
       .play()
