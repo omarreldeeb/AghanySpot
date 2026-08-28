@@ -6,6 +6,7 @@ export function useAudioPlayer(src) {
   const rafRef = useRef(null);
   const limitRef = useRef(null);
   const loopRef = useRef(false);
+  const playRequestRef = useRef(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [playbackId, setPlaybackId] = useState(0);
@@ -14,6 +15,24 @@ export function useAudioPlayer(src) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
+  }, []);
+
+  const seekToStart = useCallback((audio) => {
+    if (audio.currentTime === 0) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        audio.removeEventListener('seeked', finish);
+        resolve();
+      };
+
+      audio.addEventListener('seeked', finish, { once: true });
+      audio.currentTime = 0;
+      window.setTimeout(finish, 100);
+    });
   }, []);
 
   const startCutoffLoop = useCallback(
@@ -56,20 +75,21 @@ export function useAudioPlayer(src) {
       stopCutoffLoop();
       setPlaybackId((id) => id + 1);
       audio.pause();
-      audio.currentTime = 0;
       const duration = CLIP_DURATIONS[step];
       const playbackDuration = duration === 0.1 ? SHORT_CLIP_PLAYBACK_DURATION : duration;
       loopRef.current = shouldLoop;
+      const playRequest = ++playRequestRef.current;
       setIsPlaying(true);
-      startCutoffLoop(playbackDuration);
 
-      audio
-        .play()
-        .catch(() => {
+      seekToStart(audio).then(() => {
+        if (playRequest !== playRequestRef.current) return;
+        startCutoffLoop(playbackDuration);
+        audio.play().catch(() => {
           setIsPlaying(false);
         });
+      });
     },
-    [unlocked, startCutoffLoop, stopCutoffLoop],
+    [seekToStart, startCutoffLoop, stopCutoffLoop],
   );
 
   const playFull = useCallback((restart = true) => {

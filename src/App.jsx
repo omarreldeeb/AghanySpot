@@ -156,7 +156,6 @@ export default function App() {
       resumeFull();
     } else {
       // always start snippet playback from the start of the track
-      if (audioRef.current) audioRef.current.currentTime = 0;
       playSnippet(step, loopEnabled);
     }
   }, [audioRef, gameStatus, loopEnabled, playSnippet, resumeFull, step]);
