@@ -80,7 +80,7 @@ export const EGYPTIAN_SONGS = [
   },
   {
     id: 7,
-    title: 'Adrenalin',
+    title: 'Adrenaline',
     artist: 'Mohamed Hamaki',
     arabicTitle: 'أدرينالين',
     arabicArtist: 'محمد \u062D\u0645\u0627\u0643\u064A',
