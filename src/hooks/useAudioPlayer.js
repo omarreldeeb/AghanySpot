@@ -9,7 +9,7 @@ export function useAudioPlayer(src) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [playbackId, setPlaybackId] = useState(0);
-  const shortClipWindow = 0.5;
+  const shortClipWindow = 0.2;
 
   const stopCutoffLoop = useCallback(() => {
     if (rafRef.current != null) {
