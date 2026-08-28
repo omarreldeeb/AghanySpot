@@ -50,7 +50,7 @@ export default function PlayerDisc({
           : audio.currentTime || 0;
         const raw = Math.min(
           (!unlocked && clipDuration <= 0.1 ? elapsed : audio.currentTime || 0) /
-            (clipDuration <= 0.1 ? 0.2 : target || 1),
+            (clipDuration <= 0.1 ? 0.16 : target || 1),
           1,
         );
       const value = raw > 0.999 ? 1 : raw;
