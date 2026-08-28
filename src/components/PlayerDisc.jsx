@@ -15,6 +15,7 @@ export default function PlayerDisc({
   const [progress, setProgress] = useState(0);
   const rafRef = useRef(null);
   const fillRef = useRef(null);
+  const visualStartRef = useRef(null);
 
   useEffect(() => {
     // reset progress when step changes or unlocked state toggles
@@ -32,8 +33,14 @@ export default function PlayerDisc({
         return;
       }
 
-      const target = unlocked ? (audio.duration || clipDuration) : clipDuration;
-      const raw = Math.min((audio.currentTime || 0) / (target || 1), 1);
+        const target = unlocked ? (audio.duration || clipDuration) : clipDuration;
+        const elapsed = visualStartRef.current
+          ? (performance.now() - visualStartRef.current) / 1000
+          : audio.currentTime || 0;
+        const raw = Math.min(
+          (!unlocked && clipDuration <= 0.1 ? elapsed : audio.currentTime || 0) / (target || 1),
+          1,
+        );
       const value = raw > 0.999 ? 1 : raw;
 
       const pct = Math.max(0, Math.min(100, value * 100));
@@ -60,6 +67,15 @@ export default function PlayerDisc({
     };
   }, [isPlaying, unlocked, clipDuration, audioRef]);
 
+  const handlePlay = () => {
+    visualStartRef.current = performance.now();
+    if (fillRef.current) {
+      fillRef.current.style.width = '0%';
+      fillRef.current.style.boxShadow = 'none';
+    }
+    onPlay();
+  };
+
   return (
     <div className="player-section">
       <div className={`disc-wrap ${isPlaying ? 'disc-wrap--active' : ''}`}>
@@ -73,7 +89,7 @@ export default function PlayerDisc({
         <button
           type="button"
           className="disc-play-btn"
-          onClick={isPlaying ? onPause : onPlay}
+          onClick={isPlaying ? onPause : handlePlay}
           aria-label={isPlaying ? 'Pause' : 'Play clip'}
         >
           {isPlaying ? (
