@@ -135,7 +135,7 @@ export default function App() {
 
   const handlePlay = useCallback(() => {
     if (gameStatus !== 'PLAYING') {
-      playFull();
+      playFull(false);
     } else {
       // always start snippet playback from the start of the track
       if (audioRef.current) audioRef.current.currentTime = 0;
