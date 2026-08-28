@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Play, Pause, Disc3 } from 'lucide-react';
+import { Play, Pause, Disc3, Repeat } from 'lucide-react';
 import AudioVisualizer from './AudioVisualizer';
 
 export default function PlayerDisc({
@@ -12,6 +12,8 @@ export default function PlayerDisc({
   onPause,
   step,
   playbackId,
+  loopEnabled,
+  onLoopToggle,
 }) {
   const [progress, setProgress] = useState(0);
   const rafRef = useRef(null);
@@ -109,6 +111,16 @@ export default function PlayerDisc({
           <div ref={fillRef} className="player-progress__fill" style={{ width: `0%` }} />
         </div>
         <AudioVisualizer audioRef={audioRef} isPlaying={isPlaying} accent={accent} />
+        <button
+          type="button"
+          className={`loop-toggle ${loopEnabled ? 'loop-toggle--active' : ''}`}
+          onClick={onLoopToggle}
+          aria-pressed={loopEnabled}
+          title="Repeat this clip"
+        >
+          <Repeat size={15} />
+          <span>Loop clip</span>
+        </button>
       </div>
     </div>
   );

@@ -39,6 +39,7 @@ export default function App() {
   const [selectedDifficulty, setSelectedDifficulty] = useState('Any');
   const [volume, setVolume] = useState(1);
   const [accent, setAccent] = useState(() => ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)]);
+  const [loopEnabled, setLoopEnabled] = useState(false);
 
   const filteredSongs = useMemo(() => {
     return EGYPTIAN_SONGS.filter((s) => {
@@ -104,7 +105,7 @@ export default function App() {
     });
   }, [currentSong.id]);
 
-  const { audioRef, isPlaying, unlocked, playbackId, playSnippet, playFull, resumeFull, pause, unlock, reset } =
+  const { audioRef, isPlaying, unlocked, playbackId, playSnippet, playFull, resumeFull, setLooping, pause, unlock, reset } =
     useAudioPlayer(currentSong?.src);
 
   // keep audio volume in sync
@@ -139,9 +140,17 @@ export default function App() {
     } else {
       // always start snippet playback from the start of the track
       if (audioRef.current) audioRef.current.currentTime = 0;
-      playSnippet(step);
+      playSnippet(step, loopEnabled);
     }
-  }, [audioRef, gameStatus, playSnippet, resumeFull, step]);
+  }, [audioRef, gameStatus, loopEnabled, playSnippet, resumeFull, step]);
+
+  const handleLoopToggle = () => {
+    setLoopEnabled((enabled) => {
+      const nextEnabled = !enabled;
+      setLooping(nextEnabled);
+      return nextEnabled;
+    });
+  };
 
   const submitGuess = (selectedSong) => {
     if (gameStatus !== 'PLAYING') return;
@@ -297,6 +306,8 @@ export default function App() {
               onPause={pause}
               step={step}
               playbackId={playbackId}
+              loopEnabled={loopEnabled}
+              onLoopToggle={handleLoopToggle}
             />
 
             <GuessHistory guesses={guesses} />

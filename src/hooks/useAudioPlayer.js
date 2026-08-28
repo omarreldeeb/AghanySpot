@@ -5,6 +5,7 @@ export function useAudioPlayer(src) {
   const audioRef = useRef(null);
   const rafRef = useRef(null);
   const limitRef = useRef(null);
+  const loopRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [playbackId, setPlaybackId] = useState(0);
@@ -26,6 +27,13 @@ export function useAudioPlayer(src) {
         if (!audio || limitRef.current == null) return;
 
         if (audio.currentTime >= limitRef.current) {
+          if (loopRef.current) {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.play().catch(() => setIsPlaying(false));
+            rafRef.current = requestAnimationFrame(tick);
+            return;
+          }
           audio.pause();
           audio.currentTime = limitRef.current;
           setIsPlaying(false);
@@ -42,7 +50,7 @@ export function useAudioPlayer(src) {
   );
 
   const playSnippet = useCallback(
-    (step) => {
+    (step, shouldLoop = false) => {
       const audio = audioRef.current;
       if (!audio) return;
 
@@ -51,6 +59,7 @@ export function useAudioPlayer(src) {
       audio.pause();
       audio.currentTime = 0;
       const duration = CLIP_DURATIONS[step];
+      loopRef.current = shouldLoop;
       setIsPlaying(true);
       startCutoffLoop(duration);
 
@@ -86,6 +95,10 @@ export function useAudioPlayer(src) {
     limitRef.current = null;
     audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
   }, [stopCutoffLoop]);
+
+  const setLooping = useCallback((enabled) => {
+    loopRef.current = enabled;
+  }, []);
 
   const pause = useCallback(() => {
     stopCutoffLoop();
@@ -130,6 +143,7 @@ export function useAudioPlayer(src) {
     playSnippet,
     playFull,
     resumeFull,
+    setLooping,
     pause,
     unlock,
     reset,

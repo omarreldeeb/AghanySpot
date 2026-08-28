@@ -445,6 +445,27 @@
   opacity: 0.85;
 }
 
+.loop-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.loop-toggle--active {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.14);
+  color: var(--accent);
+  box-shadow: 0 0 14px var(--accent-glow);
+}
+
 /* Guess history */
 .guess-history {
   display: flex;
