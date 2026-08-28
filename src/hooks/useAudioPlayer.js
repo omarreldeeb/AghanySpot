@@ -49,22 +49,16 @@ export function useAudioPlayer(src) {
       stopCutoffLoop();
       setPlaybackId((id) => id + 1);
       audio.pause();
-      if (audio.readyState > 0) audio.currentTime = 0;
+      audio.currentTime = 0;
+      const duration = CLIP_DURATIONS[step];
+      setIsPlaying(true);
+      startCutoffLoop(duration);
 
       audio
         .play()
-        .then(async () => {
-          if (CLIP_DURATIONS[step] <= 0.1 && audio.currentTime > 0.02) {
-            audio.pause();
-            audio.currentTime = 0;
-            await audio.play();
-          }
-          setIsPlaying(true);
-          if (!unlocked) {
-            startCutoffLoop(CLIP_DURATIONS[step]);
-          }
-        })
-        .catch(() => setIsPlaying(false));
+        .catch(() => {
+          setIsPlaying(false);
+        });
     },
     [unlocked, startCutoffLoop, stopCutoffLoop],
   );
