@@ -9,6 +9,7 @@ export function useAudioPlayer(src) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [playbackId, setPlaybackId] = useState(0);
+  const shortClipWindow = 0.5;
 
   const stopCutoffLoop = useCallback(() => {
     if (rafRef.current != null) {
@@ -59,9 +60,10 @@ export function useAudioPlayer(src) {
       audio.pause();
       audio.currentTime = 0;
       const duration = CLIP_DURATIONS[step];
+      const playbackDuration = duration === 0.1 ? shortClipWindow : duration;
       loopRef.current = shouldLoop;
       setIsPlaying(true);
-      startCutoffLoop(duration);
+      startCutoffLoop(playbackDuration);
 
       audio
         .play()
