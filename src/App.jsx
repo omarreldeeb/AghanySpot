@@ -17,6 +17,17 @@ function randInt(max, exclude = -1) {
   return n;
 }
 
+const ACCENT_COLORS = [
+  '#22c55e',
+  '#06b6d4',
+  '#3b82f6',
+  '#8b5cf6',
+  '#d946ef',
+  '#f43f5e',
+  '#f97316',
+  '#eab308',
+];
+
 export default function App() {
   const [songIndex, setSongIndex] = useState(() => Math.floor(Math.random() * EGYPTIAN_SONGS.length));
   const [step, setStep] = useState(0);
@@ -27,6 +38,7 @@ export default function App() {
   const [selectedEra, setSelectedEra] = useState('Any era');
   const [selectedDifficulty, setSelectedDifficulty] = useState('Any');
   const [volume, setVolume] = useState(1);
+  const [accent, setAccent] = useState(() => ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)]);
 
   const filteredSongs = useMemo(() => {
     return EGYPTIAN_SONGS.filter((s) => {
@@ -84,6 +96,13 @@ export default function App() {
   }, [activePool.length, songIndex]);
 
   const currentSong = activePool[songIndex] || EGYPTIAN_SONGS[0];
+
+  useEffect(() => {
+    setAccent((previous) => {
+      const choices = ACCENT_COLORS.filter((color) => color !== previous);
+      return choices[Math.floor(Math.random() * choices.length)];
+    });
+  }, [currentSong.id]);
 
   const { audioRef, isPlaying, unlocked, playbackId, playSnippet, playFull, pause, unlock, reset } =
     useAudioPlayer(currentSong?.src);
@@ -274,7 +293,7 @@ export default function App() {
               isPlaying={isPlaying}
               unlocked={unlocked}
               clipDuration={CLIP_DURATIONS[step]}
-              accent={currentSong?.accent}
+              accent={accent}
               onPlay={handlePlay}
               onPause={pause}
               step={step}
