@@ -107,6 +107,9 @@ export default function PlayerDisc({
       <div className="player-meta">
         <div className="player-progress" aria-hidden>
           <div ref={fillRef} className="player-progress__fill" style={{ width: `0%` }} />
+          {[1, 2, 3, 4].map((divider) => (
+            <span key={divider} className={`player-progress__divider player-progress__divider--${divider}`} />
+          ))}
         </div>
         <AudioVisualizer audioRef={audioRef} isPlaying={isPlaying} accent={accent} />
       </div>

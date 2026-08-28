@@ -258,14 +258,9 @@
 .clip-progress__bar {
   width: 100%;
   height: 4px;
-  border-radius: 999px 0 0 999px;
-  border-right: 2px solid var(--bg);
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   transition: background 0.3s ease, box-shadow 0.3s ease;
-}
-
-.clip-progress__item:last-child .clip-progress__bar {
-  border-radius: 0 999px 999px 0;
 }
 
 .clip-progress__bar--current {
@@ -421,6 +416,7 @@
 }
 
 .player-progress {
+  position: relative;
   width: 100%;
   max-width: 360px;
   height: 8px;
@@ -429,6 +425,21 @@
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.03);
 }
+
+.player-progress__divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--bg);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.player-progress__divider--1 { left: 20%; }
+.player-progress__divider--2 { left: 40%; }
+.player-progress__divider--3 { left: 60%; }
+.player-progress__divider--4 { left: 80%; }
 
 .player-progress__fill {
   height: 100%;
