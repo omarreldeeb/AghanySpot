@@ -104,7 +104,7 @@ export default function App() {
     });
   }, [currentSong.id]);
 
-  const { audioRef, isPlaying, unlocked, playbackId, playSnippet, playFull, pause, unlock, reset } =
+  const { audioRef, isPlaying, unlocked, playbackId, playSnippet, playFull, resumeFull, pause, unlock, reset } =
     useAudioPlayer(currentSong?.src);
 
   // keep audio volume in sync
@@ -135,13 +135,13 @@ export default function App() {
 
   const handlePlay = useCallback(() => {
     if (gameStatus !== 'PLAYING') {
-      playFull(false);
+      resumeFull();
     } else {
       // always start snippet playback from the start of the track
       if (audioRef.current) audioRef.current.currentTime = 0;
       playSnippet(step);
     }
-  }, [gameStatus, playFull, playSnippet, step]);
+  }, [audioRef, gameStatus, playSnippet, resumeFull, step]);
 
   const submitGuess = (selectedSong) => {
     if (gameStatus !== 'PLAYING') return;
@@ -230,7 +230,6 @@ export default function App() {
                     'pill',
                     selectedDifficulty === p && 'pill--active',
                   ]
-                    .filter(Boolean)
                     .join(' ')}
                   onClick={() => setSelectedDifficulty(p)}
                 >
@@ -251,7 +250,7 @@ export default function App() {
           <header className="header">
             <div className="header__badge">🇪🇬 Egyptian Music</div>
             <h1 className="header__title">AghanySpot</h1>
-            <p className="header__subtitle">Guess the track</p>
+            <p className="header__subtitle">Guess the Song</p>
           </header>
 
           <div className="card">
@@ -307,7 +306,7 @@ export default function App() {
                 status={gameStatus}
                 song={currentSong}
                 onNext={resetGame}
-                onReplayFull={() => playFull(gameStatus === 'LOST')}
+                onReplayFull={gameStatus === 'LOST' ? playFull : resumeFull}
                 onPause={pause}
                 isPlaying={isPlaying}
               />

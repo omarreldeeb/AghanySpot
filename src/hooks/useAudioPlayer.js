@@ -78,6 +78,15 @@ export function useAudioPlayer(src) {
       .catch(() => setIsPlaying(false));
   }, [stopCutoffLoop]);
 
+  const resumeFull = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    stopCutoffLoop();
+    limitRef.current = null;
+    audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+  }, [stopCutoffLoop]);
+
   const pause = useCallback(() => {
     stopCutoffLoop();
     const audio = audioRef.current;
@@ -120,6 +129,7 @@ export function useAudioPlayer(src) {
     playbackId,
     playSnippet,
     playFull,
+    resumeFull,
     pause,
     unlock,
     reset,

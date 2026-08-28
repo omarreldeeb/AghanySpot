@@ -210,8 +210,10 @@
 .header__title {
   margin: 0 0 8px;
   font-size: clamp(2rem, 8vw, 2.75rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-family: 'Avenir Next', 'Trebuchet MS', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
   background: linear-gradient(135deg, #fff 30%, #a1a1aa);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
