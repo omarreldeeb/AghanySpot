@@ -69,6 +69,7 @@ function songsPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/AghanySpot/',
   plugins: [react(), songsPlugin()],
   server: {
     host: true,
