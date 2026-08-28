@@ -336,6 +336,7 @@ export default function App() {
         ref={audioRef}
         src={currentSong.src}
         preload="auto"
+        playsInline
         onEnded={() => pause()}
       />
     </div>

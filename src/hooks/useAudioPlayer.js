@@ -46,7 +46,7 @@ export function useAudioPlayer(src) {
       if (!audio) return;
 
       stopCutoffLoop();
-      audio.currentTime = 0;
+      if (audio.readyState > 0) audio.currentTime = 0;
 
       audio
         .play()
@@ -67,7 +67,7 @@ export function useAudioPlayer(src) {
 
     stopCutoffLoop();
     limitRef.current = null;
-    audio.currentTime = 0;
+    if (audio.readyState > 0) audio.currentTime = 0;
 
     audio
       .play()
