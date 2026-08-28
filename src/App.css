@@ -245,7 +245,7 @@
 .clip-progress {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 0;
+  gap: 8px;
 }
 
 .clip-progress__item {
@@ -362,13 +362,12 @@
 .disc-grooves {
   position: absolute;
   inset: 12px;
-  border-radius: 50%;
+  gap: 8px;
   background: repeating-radial-gradient(
     circle at center,
     transparent 0px,
     transparent 3px,
     rgba(255, 255, 255, 0.03) 3px,
-    rgba(255, 255, 255, 0.03) 4px
   );
 }
 
@@ -416,7 +415,6 @@
 }
 
 .player-progress {
-  position: relative;
   width: 100%;
   max-width: 360px;
   height: 8px;
@@ -425,21 +423,6 @@
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.03);
 }
-
-.player-progress__divider {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--bg);
-  z-index: 2;
-  pointer-events: none;
-}
-
-.player-progress__divider--1 { left: 20%; }
-.player-progress__divider--2 { left: 40%; }
-.player-progress__divider--3 { left: 60%; }
-.player-progress__divider--4 { left: 80%; }
 
 .player-progress__fill {
   height: 100%;
