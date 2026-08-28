@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Play, Pause, Disc3, Repeat } from 'lucide-react';
+import { SHORT_CLIP_PLAYBACK_DURATION } from '../data/songs';
 import AudioVisualizer from './AudioVisualizer';
 
 export default function PlayerDisc({
@@ -50,7 +51,7 @@ export default function PlayerDisc({
           : audio.currentTime || 0;
         const raw = Math.min(
           (!unlocked && clipDuration <= 0.1 ? elapsed : audio.currentTime || 0) /
-            (clipDuration <= 0.1 ? 0.16 : target || 1),
+            (clipDuration <= 0.1 ? SHORT_CLIP_PLAYBACK_DURATION : target || 1),
           1,
         );
       const value = raw > 0.999 ? 1 : raw;

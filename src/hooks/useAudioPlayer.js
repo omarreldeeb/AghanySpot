@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
-import { CLIP_DURATIONS } from '../data/songs';
+import { CLIP_DURATIONS, SHORT_CLIP_PLAYBACK_DURATION } from '../data/songs';
 
 export function useAudioPlayer(src) {
   const audioRef = useRef(null);
@@ -9,8 +9,6 @@ export function useAudioPlayer(src) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [playbackId, setPlaybackId] = useState(0);
-  const shortClipWindow = 0.16;
-
   const stopCutoffLoop = useCallback(() => {
     if (rafRef.current != null) {
       cancelAnimationFrame(rafRef.current);
@@ -60,7 +58,7 @@ export function useAudioPlayer(src) {
       audio.pause();
       audio.currentTime = 0;
       const duration = CLIP_DURATIONS[step];
-      const playbackDuration = duration === 0.1 ? shortClipWindow : duration;
+      const playbackDuration = duration === 0.1 ? SHORT_CLIP_PLAYBACK_DURATION : duration;
       loopRef.current = shouldLoop;
       setIsPlaying(true);
       startCutoffLoop(playbackDuration);
