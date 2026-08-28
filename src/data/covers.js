@@ -2,6 +2,15 @@
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`;
 
 export const COVERS = [
+  assetPath('Songs/Covers/Ahwak - Abdel Halim Hafez.jpeg'),
+  assetPath('Songs/Covers/Kadaba - Karim Osama.jpg'),
+  assetPath('Songs/Covers/Kebda - Afroto.jpeg'),
+  assetPath('Songs/Covers/El Hob Eibna - Ramy Sabry.png'),
+  assetPath('Songs/Covers/Layalina - Tul8te.jpeg'),
+  assetPath('Songs/Covers/Merayt El Hob - Tamer Ashour.jpeg'),
+  assetPath('Songs/Covers/Nano - Tul8te.jpeg'),
+  assetPath('Songs/Covers/Tegy Ntrahen - Tamer Ashour.jpg'),
+  assetPath('Songs/Covers/Wala Ash Wala Kan - Tul8te.jpg'),
   assetPath('Songs/Covers/ ركبت الخصومه.webp'),
   assetPath('Songs/Covers/3 DAQAT.jpeg'),
   assetPath('Songs/Covers/Adrenalina.jpeg'),
