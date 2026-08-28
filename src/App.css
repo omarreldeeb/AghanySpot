@@ -109,6 +109,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
 }
 
 .top-row {
@@ -235,6 +236,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
 }
 
 /* Clip progress */
@@ -872,9 +874,17 @@
 }
 
 @media (max-width: 600px) {
+  html,
+  body,
+  #root {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   .shell {
     margin: 0 auto;
     padding: 12px 10px 20px;
+    max-width: 100%;
   }
 
   .header__badge {
@@ -899,6 +909,7 @@
   .top-row {
     gap: 12px;
     width: 100%;
+    min-width: 0;
   }
 
   .era-tabs,
