@@ -15,10 +15,10 @@ export default function GameResult({ status, song, onNext, onReplayFull, isPlayi
     const file = decodeURIComponent((song.src || '').split('/').pop() || '');
     const base = file.replace(/\.[^/.]+$/, '');
     const exactCandidates = [
-      `/Songs/Covers/${base}.jpg`,
-      `/Songs/Covers/${base}.jpeg`,
-      `/Songs/Covers/${base}.png`,
-      `/Songs/Covers/${base}.webp`,
+      `${import.meta.env.BASE_URL}Songs/Covers/${base}.jpg`,
+      `${import.meta.env.BASE_URL}Songs/Covers/${base}.jpeg`,
+      `${import.meta.env.BASE_URL}Songs/Covers/${base}.png`,
+      `${import.meta.env.BASE_URL}Songs/Covers/${base}.webp`,
     ];
 
     const tryLoad = (url) =>

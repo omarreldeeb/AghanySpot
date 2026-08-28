@@ -1,7 +1,8 @@
 // NOTE: When adding songs, please verify the correct English and Arabic
 // spellings (title and artist) and punctuation. Fill `arabicTitle` and
 // `arabicArtist` for every entry so the UI shows accurate metadata.
-const songSrc = (filename) => `/Songs/${encodeURIComponent(filename)}`;
+const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`;
+const songSrc = (filename) => assetPath(`Songs/${encodeURIComponent(filename)}`);
 
 export const EGYPTIAN_SONGS = [
   {
@@ -90,7 +91,7 @@ export const EGYPTIAN_SONGS = [
     era: '2020s',
     difficulty: 'Medium',
     src: songSrc('Ein sehreya.mp3'),
-    cover: '/Songs/Covers/Ein sehreya.png',
+    cover: assetPath('Songs/Covers/Ein sehreya.png'),
     accent: '#22c55e',
   },
   {
@@ -102,7 +103,7 @@ export const EGYPTIAN_SONGS = [
     era: '2020s',
     difficulty: 'Easy',
     src: songSrc('El neyya Legecy.mp3'),
-    cover: '/Songs/Covers/El neyya.jpeg',
+    cover: assetPath('Songs/Covers/El neyya.jpeg'),
     accent: '#60a5fa',
   },
   {
@@ -114,7 +115,7 @@ export const EGYPTIAN_SONGS = [
     era: '2020s',
     difficulty: 'Medium',
     src: songSrc('El Wa2t El Daye3 Legecy.mp3'),
-    cover: '/Songs/Covers/El Wa2t El Daye3.jpeg',
+    cover: assetPath('Songs/Covers/El Wa2t El Daye3.jpeg'),
     accent: '#fb7185',
   },
   {
@@ -126,7 +127,7 @@ export const EGYPTIAN_SONGS = [
     era: '2020s',
     difficulty: 'Expert',
     src: songSrc('Hadota Almany Marawan Mousa.mp3'),
-    cover: '/Songs/Covers/Hadota Almany.png',
+    cover: assetPath('Songs/Covers/Hadota Almany.png'),
     accent: '#f97316',
   },
   {
@@ -138,7 +139,7 @@ export const EGYPTIAN_SONGS = [
     era: '2020s',
     difficulty: 'Medium',
     src: songSrc(' ركبت الخصومه Hamo el morshedy.mp3'),
-    cover: '/Songs/Covers/ ركبت الخصومه.webp',
+    cover: assetPath('Songs/Covers/ ركبت الخصومه.webp'),
     accent: '#34d399',
   },
 ];
