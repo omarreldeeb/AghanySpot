@@ -2,6 +2,8 @@
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`;
 
 export const COVERS = [
+  assetPath('Songs/Covers/Dary Ya Alby - Hamza Namira.jpg'),
+  assetPath('Songs/Covers/We Ghalawatek - Amr Diab.jpg'),
   assetPath('Songs/Covers/Ahwak - Abdel Halim Hafez.jpeg'),
   assetPath('Songs/Covers/Kadaba - Karim Osama.jpg'),
   assetPath('Songs/Covers/Kebda - Afroto.jpeg'),

@@ -257,6 +257,30 @@ export const EGYPTIAN_SONGS = [
     cover: assetPath('Songs/Covers/Ahwak - Abdel Halim Hafez.jpeg'),
     accent: '#facc15',
   },
+  {
+    id: 22,
+    title: 'Dary Ya Alby',
+    artist: 'Hamza Namira',
+    arabicTitle: 'داري يا قلبي',
+    arabicArtist: 'حمزة نمرة',
+    era: '2010s',
+    difficulty: 'Medium',
+    src: songSrc('Dary Ya Alby - Hamza Namira.mp3'),
+    cover: assetPath('Songs/Covers/Dary Ya Alby - Hamza Namira.jpg'),
+    accent: '#0ea5e9',
+  },
+  {
+    id: 23,
+    title: 'We Ghalawatek',
+    artist: 'Amr Diab',
+    arabicTitle: 'و غلاوتك',
+    arabicArtist: 'عمرو دياب',
+    era: '1900s',
+    difficulty: 'Expert',
+    src: songSrc('We Ghalawatek - Amr Diab.mp3'),
+    cover: assetPath('Songs/Covers/We Ghalawatek - Amr Diab.jpg'),
+    accent: '#f97316',
+  },
 ];
 
 // Exact Songspot snippet durations (seconds)
