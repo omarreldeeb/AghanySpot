@@ -324,11 +324,6 @@ export default function App() {
             )}
           </div>
 
-          <footer className="footer">
-            <span>{activePool.length} tracks</span>
-            <span className="footer__dot">·</span>
-            <span>Song {songIndex + 1}</span>
-          </footer>
         </section>
 
         <aside className="sidebar sidebar--right">

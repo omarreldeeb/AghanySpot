@@ -245,7 +245,7 @@
 .clip-progress {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  gap: 0;
 }
 
 .clip-progress__item {
@@ -258,9 +258,14 @@
 .clip-progress__bar {
   width: 100%;
   height: 4px;
-  border-radius: 999px;
+  border-radius: 999px 0 0 999px;
+  border-right: 2px solid var(--bg);
   background: rgba(255, 255, 255, 0.08);
   transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.clip-progress__item:last-child .clip-progress__bar {
+  border-radius: 0 999px 999px 0;
 }
 
 .clip-progress__bar--current {
