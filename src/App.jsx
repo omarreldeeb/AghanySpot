@@ -9,7 +9,7 @@ import SearchBar from './components/SearchBar';
 import GameResult from './components/GameResult';
 import './App.css';
 
-const CLICK_SOUND_URL = new URL('../Click.mp3', import.meta.url).href;
+const CLICK_SOUND_URL = new URL('../Songs/Click.mp3', import.meta.url).href;
 
 function randInt(max, exclude = -1) {
   if (max <= 1) return 0;
@@ -43,7 +43,6 @@ export default function App() {
   const [volume, setVolume] = useState(1);
   const [accent, setAccent] = useState(() => ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)]);
   const [loopEnabled, setLoopEnabled] = useState(false);
-  const clickAudioRef = useRef(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     try {
       return window.localStorage.getItem('aghanyspot-theme') !== 'light';
@@ -164,15 +163,26 @@ export default function App() {
   }, [audioRef, gameStatus, loopEnabled, playSnippet, resumeFull, step]);
 
   const playUiClick = useCallback(() => {
-    const audio = clickAudioRef.current;
-    if (!audio) return;
-
-    audio.src = CLICK_SOUND_URL;
-    audio.volume = Math.min(1, volume * 0.28);
-    audio.playbackRate = 1.08;
-    audio.load();
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
+    try {
+      const audio = new Audio(CLICK_SOUND_URL);
+      audio.preload = 'auto';
+      audio.volume = Math.min(1, volume * 0.28);
+      audio.playbackRate = 1.08;
+      audio.currentTime = 0;
+      void audio.play().catch(() => {
+        try {
+          const fallback = new Audio(CLICK_SOUND_URL);
+          fallback.preload = 'auto';
+          fallback.volume = Math.min(1, volume * 0.28);
+          fallback.playbackRate = 1.08;
+          void fallback.play().catch(() => {});
+        } catch {
+          // Ignore browser playback restrictions.
+        }
+      });
+    } catch {
+      // Ignore browser playback restrictions.
+    }
   }, [volume]);
 
   const handleLoopToggle = () => {
@@ -425,7 +435,6 @@ export default function App() {
           }} aria-label="Dismiss">×</button>
         </div>
       </div>
-      <audio ref={clickAudioRef} src={CLICK_SOUND_URL} preload="auto" />
       <audio
         ref={audioRef}
         src={currentSong.src}
