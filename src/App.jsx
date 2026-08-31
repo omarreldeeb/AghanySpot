@@ -167,8 +167,10 @@ export default function App() {
     const audio = clickAudioRef.current;
     if (!audio) return;
 
+    audio.src = CLICK_SOUND_URL;
     audio.volume = Math.min(1, volume * 0.28);
     audio.playbackRate = 1.08;
+    audio.load();
     audio.currentTime = 0;
     audio.play().catch(() => {});
   }, [volume]);

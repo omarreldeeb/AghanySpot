@@ -7,7 +7,15 @@ export default function ClipProgress({ step, gameStatus }) {
         const isPast = i < step;
         const isCurrent = i === step && gameStatus === 'PLAYING';
         const isFailed = isPast || (gameStatus === 'LOST' && i <= step);
-        const format = dur === 2 ? '2.5s' : dur < 1 ? `${dur.toFixed(1)}s` : `${dur}s`;
+
+        const format = Number(dur) === 0.35
+          ? '0.5s'
+          : Number(dur) === 1.5
+            ? '2s'
+            : dur < 1
+              ? `${Number(dur).toFixed(1)}s`
+              : `${Number(dur).toFixed(0)}s`;
+
         return (
           <div key={dur} className="clip-progress__item">
             <div
