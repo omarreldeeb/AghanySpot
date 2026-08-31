@@ -9,6 +9,8 @@ import SearchBar from './components/SearchBar';
 import GameResult from './components/GameResult';
 import './App.css';
 
+const CLICK_SOUND_URL = new URL('../Click.mp3', import.meta.url).href;
+
 function randInt(max, exclude = -1) {
   if (max <= 1) return 0;
   let n;
@@ -421,7 +423,7 @@ export default function App() {
           }} aria-label="Dismiss">×</button>
         </div>
       </div>
-      <audio ref={clickAudioRef} src="/Click.mp3" preload="auto" />
+      <audio ref={clickAudioRef} src={CLICK_SOUND_URL} preload="auto" />
       <audio
         ref={audioRef}
         src={currentSong.src}
