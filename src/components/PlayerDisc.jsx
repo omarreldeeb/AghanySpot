@@ -35,8 +35,7 @@ export default function PlayerDisc({
   }, [step, unlocked]);
 
   useEffect(() => {
-    // Update progress directly each animation frame from the audio element's currentTime
-    // Use direct DOM writes to avoid React re-renders that can cause jank.
+    // Update progress from the actual audio time to avoid artificial delay and drift on short clips.
     let lastWidth = -1;
     const tick = () => {
       const audio = audioRef.current;
@@ -45,15 +44,9 @@ export default function PlayerDisc({
         return;
       }
 
-        const target = unlocked ? (audio.duration || clipDuration) : clipDuration;
-        const elapsed = visualStartRef.current
-          ? (performance.now() - visualStartRef.current) / 1000
-          : audio.currentTime || 0;
-        const raw = Math.min(
-          (!unlocked && clipDuration <= 0.1 ? elapsed : audio.currentTime || 0) /
-            (clipDuration <= 0.1 ? SHORT_CLIP_PLAYBACK_DURATION : target || 1),
-          1,
-        );
+      const duration = clipDuration <= 0.1 ? SHORT_CLIP_PLAYBACK_DURATION : (audio.duration || clipDuration || 1);
+      const currentTime = audio.currentTime || 0;
+      const raw = Math.min(currentTime / Math.max(duration, 0.001), 1);
       const value = raw > 0.999 ? 1 : raw;
 
       const pct = Math.max(0, Math.min(100, value * 100));

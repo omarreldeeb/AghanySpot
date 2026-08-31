@@ -17,25 +17,10 @@ export function useAudioPlayer(src) {
     }
   }, []);
 
-  const seekToStart = useCallback((audio, reload = false) => {
-    if (reload) {
-      return new Promise((resolve) => {
-        let settled = false;
-        const finish = () => {
-          if (settled) return;
-          settled = true;
-          audio.removeEventListener('canplay', finish);
-          resolve();
-        };
+  const seekToStart = useCallback((audio) => {
+    if (!audio) return Promise.resolve();
 
-        audio.addEventListener('canplay', finish, { once: true });
-        audio.load();
-        if (audio.readyState >= 3) window.setTimeout(finish, 0);
-        window.setTimeout(finish, 500);
-      });
-    }
-
-    if (audio.currentTime === 0) return Promise.resolve();
+    if (audio.currentTime <= 0.01) return Promise.resolve();
 
     return new Promise((resolve) => {
       let settled = false;
@@ -43,12 +28,20 @@ export function useAudioPlayer(src) {
         if (settled) return;
         settled = true;
         audio.removeEventListener('seeked', finish);
+        audio.removeEventListener('canplay', finish);
         resolve();
       };
 
       audio.addEventListener('seeked', finish, { once: true });
-      audio.currentTime = 0;
-      window.setTimeout(finish, 100);
+      audio.addEventListener('canplay', finish, { once: true });
+
+      try {
+        audio.currentTime = 0;
+      } catch {
+        // some browsers throw when the media is in a transient state; continue without stalling playback
+      }
+
+      window.setTimeout(finish, 40);
     });
   }, []);
 
@@ -93,12 +86,12 @@ export function useAudioPlayer(src) {
       setPlaybackId((id) => id + 1);
       audio.pause();
       const duration = CLIP_DURATIONS[step];
-      const playbackDuration = duration === 0.1 ? SHORT_CLIP_PLAYBACK_DURATION : duration;
+      const playbackDuration = duration <= 0.1 ? SHORT_CLIP_PLAYBACK_DURATION : duration;
       loopRef.current = shouldLoop;
       const playRequest = ++playRequestRef.current;
       setIsPlaying(true);
 
-      seekToStart(audio, duration === 0.1).then(() => {
+      seekToStart(audio).then(() => {
         if (playRequest !== playRequestRef.current) return;
         startCutoffLoop(playbackDuration);
         audio.play().catch(() => {
