@@ -67,21 +67,37 @@ const buildChallengeSequence = (rounds, seed = Date.now()) => {
   return sequence.slice(0, rounds);
 };
 
-const buildChallengeSummary = (payload, results = []) => {
-  const guessed = results.filter((r) => r.correct);
-  const missed = results.filter((r) => !r.correct);
-  const opponentCount = Math.max(1, Math.round(payload.rounds * 0.6));
-  const opponentGuessed = payload.trackIds.slice(0, opponentCount).map((id) => {
-    const song = EGYPTIAN_SONGS.find((entry) => entry.id === id);
+const buildOpponentResults = (trackIds = [], rounds = 0, seed = Date.now()) => {
+  const selectedTrackIds = Array.isArray(trackIds) ? trackIds.slice(0, Math.max(1, rounds)) : [];
+  let value = Number(seed) >>> 0;
+  const nextRand = () => {
+    value = (value * 1664525 + 1013904223) >>> 0;
+    return value / 4294967296;
+  };
+
+  return selectedTrackIds.map((trackId, index) => {
+    const song = EGYPTIAN_SONGS.find((entry) => entry.id === trackId);
+    const guessed = index < Math.max(1, Math.round(rounds * 0.6));
     return {
       title: song?.title || 'Unknown song',
-      seconds: Number((Math.random() * 3 + 2.5).toFixed(1)),
+      correct: guessed,
+      seconds: Number((2.5 + nextRand() * 3).toFixed(1)),
     };
   });
-  const opponentMissed = payload.trackIds.slice(opponentCount).map((id) => {
-    const song = EGYPTIAN_SONGS.find((entry) => entry.id === id);
-    return song?.title || 'Unknown song';
-  });
+};
+
+const buildChallengeSummary = (payload, results = [], opponentResults = []) => {
+  const guessed = results.filter((r) => r.correct);
+  const missed = results.filter((r) => !r.correct);
+  const opponent = Array.isArray(opponentResults) && opponentResults.length > 0
+    ? opponentResults
+    : buildOpponentResults(payload.trackIds, payload.rounds, payload.seed || Date.now());
+
+  const opponentGuessed = opponent.filter((entry) => entry.correct).map((entry) => ({
+    title: entry.title,
+    seconds: Number(entry.seconds),
+  }));
+  const opponentMissed = opponent.filter((entry) => !entry.correct).map((entry) => entry.title);
 
   return {
     player: {
@@ -144,6 +160,8 @@ export default function App() {
   const [challengeRoundsInput, setChallengeRoundsInput] = useState(5);
   const [challengeError, setChallengeError] = useState('');
   const [challengeStatus, setChallengeStatus] = useState('idle');
+  const [challengeOpponentResults, setChallengeOpponentResults] = useState([]);
+  const [roundFeedback, setRoundFeedback] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copyToast, setCopyToast] = useState('');
   const challengeRoundStartedAt = useRef(Date.now());
@@ -228,8 +246,10 @@ export default function App() {
     });
   }, [currentSong.id]);
 
+  const currentSongForView = is1v1Mode ? challengeCurrentSong : currentSong;
+
   const { audioRef, isPlaying, unlocked, playbackId, playSnippet, playFull, resumeFull, setLooping, pause, unlock, reset } =
-    useAudioPlayer(currentSong?.src);
+    useAudioPlayer(currentSongForView?.src);
 
   // keep audio volume in sync
   useEffect(() => {
@@ -262,6 +282,52 @@ export default function App() {
   }, [is1v1Mode, challengeRoundIndex]);
 
   useEffect(() => {
+    if (!is1v1Mode) return;
+    setRoundFeedback('');
+  }, [challengeRoundIndex, challengeStatus, is1v1Mode]);
+
+  const syncChallengeRecord = useCallback((payload, statusOverride = null) => {
+    if (!payload?.challengeId) return;
+    const key = `aghanyspot-challenge:${payload.challengeId}`;
+    const nextValue = {
+      ...payload,
+      status: statusOverride || payload.status || 'waiting',
+    };
+
+    try {
+      window.localStorage.setItem(key, JSON.stringify(nextValue));
+    } catch {
+      // Ignore when localStorage is unavailable.
+    }
+
+    return nextValue;
+  }, []);
+
+  const applyChallengeRecord = useCallback((payload) => {
+    if (!payload || !Array.isArray(payload.trackIds) || payload.trackIds.length === 0) return;
+
+    const normalizedPayload = {
+      ...payload,
+      rounds: Number(payload.rounds) || payload.trackIds.length,
+      joined: Boolean(payload.joined),
+      host: Boolean(payload.host),
+    };
+
+    setIs1v1Mode(true);
+    setChallengeConfig(normalizedPayload);
+    setChallengeQueue(normalizedPayload.trackIds);
+    setChallengeRoundIndex(0);
+    setChallengeResults([]);
+    setChallengeSummary(null);
+    setChallengeStatus(normalizedPayload.status || 'waiting');
+    setChallengeOpponentResults(buildOpponentResults(normalizedPayload.trackIds, normalizedPayload.rounds, normalizedPayload.seed || Date.now()));
+    setGameStatus('PLAYING');
+    setStep(0);
+    setQuery('');
+    setSuggestions([]);
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const encoded = params.get('challenge');
     if (!encoded) return;
@@ -269,19 +335,35 @@ export default function App() {
     const payload = decodeChallengePayload(encoded);
     if (!payload || !Array.isArray(payload.trackIds) || payload.trackIds.length === 0) return;
 
-    const guestPayload = { ...payload, host: false, joined: false };
-    setIs1v1Mode(true);
-    setChallengeConfig(guestPayload);
-    setChallengeQueue(payload.trackIds);
-    setChallengeRoundIndex(0);
-    setChallengeResults([]);
-    setChallengeSummary(null);
-    setChallengeStatus('waiting');
-    setGameStatus('PLAYING');
-    setStep(0);
-    setQuery('');
-    setSuggestions([]);
+    const guestPayload = { ...payload, host: false, joined: Boolean(payload.joined) };
+    applyChallengeRecord(guestPayload);
   }, []);
+
+  useEffect(() => {
+    if (!challengeConfig?.challengeId) return;
+
+    const storageKey = `aghanyspot-challenge:${challengeConfig.challengeId}`;
+    const handleStorage = (event) => {
+      if (event.key !== storageKey || !event.newValue) return;
+
+      try {
+        const nextPayload = JSON.parse(event.newValue);
+        if (!nextPayload) return;
+        setChallengeConfig((current) => ({ ...current, ...nextPayload }));
+        if (nextPayload.joined === true && challengeStatus === 'waiting') {
+          setChallengeConfig((current) => ({ ...current, joined: true }));
+        }
+        if (nextPayload.status === 'playing' && challengeStatus !== 'playing') {
+          setChallengeStatus('playing');
+        }
+      } catch {
+        // Ignore malformed storage payloads.
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [challengeConfig?.challengeId, challengeStatus]);
 
   const handlePlay = useCallback(() => {
     if (is1v1Mode && challengeStatus !== 'playing') return;
@@ -328,21 +410,28 @@ export default function App() {
   const submitGuess = (selectedSong) => {
     if (gameStatus !== 'PLAYING') return;
 
-    const isCorrect = selectedSong.id === currentSong.id;
+    const currentChallengeSong = is1v1Mode ? challengeCurrentSong : currentSong;
+    const isCorrect = selectedSong.id === currentChallengeSong.id;
 
     if (is1v1Mode && challengeConfig) {
       const roundDuration = Number(((Date.now() - challengeRoundStartedAt.current) / 1000).toFixed(1));
       const result = {
-        title: currentSong.title,
+        title: currentChallengeSong.title,
         correct: isCorrect,
         seconds: roundDuration,
       };
 
       const nextResults = [...challengeResults, result];
       setChallengeResults(nextResults);
+      setRoundFeedback(isCorrect ? 'Correct!' : `Not this one — it was ${currentChallengeSong.title}`);
+
+      window.setTimeout(() => {
+        setRoundFeedback('');
+      }, 1200);
 
       if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
-        setChallengeSummary(buildChallengeSummary(challengeConfig, nextResults));
+        const finalSummary = buildChallengeSummary(challengeConfig, nextResults, challengeOpponentResults);
+        setChallengeSummary(finalSummary);
         setGameStatus('PLAYING');
         setQuery('');
         setSuggestions([]);
@@ -351,8 +440,10 @@ export default function App() {
 
       setQuery('');
       setSuggestions([]);
-      setChallengeRoundIndex((prev) => prev + 1);
-      setStep(0);
+      window.setTimeout(() => {
+        setChallengeRoundIndex((prev) => prev + 1);
+        setStep(0);
+      }, 1200);
       return;
     }
 
@@ -383,27 +474,37 @@ export default function App() {
   const handleSkip = () => {
     if (gameStatus !== 'PLAYING') return;
 
+    const currentChallengeSong = is1v1Mode ? challengeCurrentSong : currentSong;
+
     if (is1v1Mode && challengeConfig && challengeStatus === 'playing') {
       if (step + 1 >= CLIP_DURATIONS.length) {
         const roundDuration = Number(((Date.now() - challengeRoundStartedAt.current) / 1000).toFixed(1));
         const nextResults = [...challengeResults, {
-          title: currentSong.title,
+          title: currentChallengeSong.title,
           correct: false,
           seconds: roundDuration,
         }];
         setChallengeResults(nextResults);
+        setRoundFeedback(`Skipped — it was ${currentChallengeSong.title}`);
+
+        window.setTimeout(() => {
+          setRoundFeedback('');
+        }, 1200);
 
         if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
-          setChallengeSummary(buildChallengeSummary(challengeConfig, nextResults));
+          const finalSummary = buildChallengeSummary(challengeConfig, nextResults, challengeOpponentResults);
+          setChallengeSummary(finalSummary);
           setQuery('');
           setSuggestions([]);
           return;
         }
 
-        setChallengeRoundIndex((prev) => prev + 1);
-        setStep(0);
-        setQuery('');
-        setSuggestions([]);
+        window.setTimeout(() => {
+          setChallengeRoundIndex((prev) => prev + 1);
+          setStep(0);
+          setQuery('');
+          setSuggestions([]);
+        }, 1200);
         return;
       }
 
@@ -489,8 +590,6 @@ export default function App() {
   const showStandardControls = !is1v1Mode && !challengeSummary;
   const challengeCurrentSong = challengeActiveSongList[challengeRoundIndex] || currentSong;
 
-  const currentSongForView = is1v1Mode ? challengeCurrentSong : currentSong;
-
   const shareChallengeLink = useCallback(() => {
     if (!challengeConfig) return;
     const url = new URL(window.location.href);
@@ -536,6 +635,7 @@ export default function App() {
     setChallengeRoundIndex(0);
     setChallengeResults([]);
     setChallengeSummary(null);
+    setChallengeOpponentResults(buildOpponentResults(trackIds, rounds, payload.seed));
     setChallengeStatus('waiting');
     setIs1v1Mode(true);
     setChallengeModalOpen(false);
@@ -547,8 +647,20 @@ export default function App() {
     const url = new URL(window.location.href);
     url.searchParams.set('challenge', encodeChallengePayload(payload));
     window.history.replaceState({}, '', url.toString());
+    syncChallengeRecord(payload, 'waiting');
     shareChallengeLink();
   };
+
+  const setChallengeJoined = useCallback((joinedPayload) => {
+    const nextPayload = { ...challengeConfig, ...joinedPayload, joined: true, host: false };
+    setChallengeConfig(nextPayload);
+    setChallengeStatus('waiting');
+    setChallengeOpponentResults(buildOpponentResults(nextPayload.trackIds, nextPayload.rounds, nextPayload.seed || Date.now()));
+    syncChallengeRecord(nextPayload, 'waiting');
+    const url = new URL(window.location.href);
+    url.searchParams.set('challenge', encodeChallengePayload(nextPayload));
+    window.history.replaceState({}, '', url.toString());
+  }, [challengeConfig, syncChallengeRecord]);
 
   const summaryPlayer = challengeSummary?.player || { total: 0, roundTotal: 0, guessed: [], missed: [] };
   const summaryOpponent = challengeSummary?.opponent || { total: 0, roundTotal: 0, guessed: [], missed: [] };
@@ -556,6 +668,8 @@ export default function App() {
   const isChallengeHost = Boolean(challengeConfig?.host);
   const canStartChallenge = challengeStatus === 'waiting' && isChallengeHost && Boolean(challengeConfig?.joined);
   const canJoinChallenge = challengeStatus === 'waiting' && !isChallengeHost;
+
+  const challengeButtonLabel = is1v1Mode && challengeStatus === 'waiting' ? (isChallengeHost ? 'Challenge' : 'Waiting') : 'Challenge a Friend';
 
   return (
     <div className={`app ${isDarkMode ? 'app--dark' : 'app--light'}`}>
@@ -692,59 +806,32 @@ export default function App() {
 
           <section className="stage">
             <header className="header">
-              <button
-                type="button"
-                className="mobile-menu-toggle"
-                onClick={() => {
-                  playUiClick();
-                  setMobileMenuOpen((open) => !open);
-                }}
-                aria-label="Open quick actions menu"
-                aria-expanded={mobileMenuOpen}
-              >
-                <span />
-                <span />
-                <span />
-              </button>
-
-              <div className={`mobile-menu ${mobileMenuOpen ? 'mobile-menu--open' : ''}`}>
+              <div className="header__actions">
                 <button
                   type="button"
-                  className="mobile-menu__item"
-                  onClick={() => {
-                    playUiClick();
-                    rerollAll();
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  Reroll all
-                </button>
-                <button
-                  type="button"
-                  className="mobile-menu__item"
+                  className="challenge-header-btn"
                   onClick={() => {
                     playUiClick();
                     openChallengeModal();
-                    setMobileMenuOpen(false);
                   }}
                 >
-                  Challenge a Friend
+                  {challengeButtonLabel}
+                </button>
+
+                <button
+                  type="button"
+                  className="theme-toggle"
+                  onClick={() => {
+                    playUiClick();
+                    setIsDarkMode((darkMode) => !darkMode);
+                  }}
+                  aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                  aria-pressed={!isDarkMode}
+                  title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
+                  {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
               </div>
-
-              <button
-                type="button"
-                className="theme-toggle"
-                onClick={() => {
-                  playUiClick();
-                  setIsDarkMode((darkMode) => !darkMode);
-                }}
-                aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                aria-pressed={!isDarkMode}
-                title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
               <div className="header__badge">🇪🇬 Egyptian Music</div>
               <h1 className="header__title">AghanySpot</h1>
               <p className="header__subtitle">{is1v1Mode ? `1v1 Round ${challengeRoundIndex + 1}/${challengeConfig?.rounds || 1}` : 'Guess the Song'}</p>
@@ -770,6 +857,7 @@ export default function App() {
                       playUiClick();
                       if (challengeConfig?.joined) {
                         setChallengeStatus('playing');
+                        syncChallengeRecord({ ...challengeConfig, status: 'playing' }, 'playing');
                       }
                     }}
                   >
@@ -781,17 +869,19 @@ export default function App() {
                     className="btn btn--primary"
                     onClick={() => {
                       playUiClick();
-                      const payload = { ...challengeConfig, joined: true, host: false };
-                      setChallengeConfig(payload);
-                      setChallengeStatus('playing');
-                      const url = new URL(window.location.href);
-                      url.searchParams.set('challenge', encodeChallengePayload(payload));
-                      window.history.replaceState({}, '', url.toString());
+                      if (!challengeConfig) return;
+                      setChallengeJoined(challengeConfig);
                     }}
                   >
                     Join challenge
                   </button>
                 )}
+              </div>
+            )}
+
+            {roundFeedback && (
+              <div className="round-feedback" role="status" aria-live="polite">
+                {roundFeedback}
               </div>
             )}
 
@@ -975,7 +1065,7 @@ export default function App() {
       </div>
       <audio
         ref={audioRef}
-        src={currentSong.src}
+        src={currentSongForView?.src || currentSong.src}
         preload="auto"
         playsInline
         onEnded={() => pause()}
