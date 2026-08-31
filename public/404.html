@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=https://app.aghanyspot.fun/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting to AghanySpot</title>
+    <script>
+      (() => {
+        const target = 'https://app.aghanyspot.fun';
+        const nextUrl = `${target}${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+        if (window.location.hostname !== 'app.aghanyspot.fun') {
+          window.location.replace(nextUrl);
+        }
+      })();
+    </script>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #07111f;
+        --panel: rgba(15, 23, 42, 0.9);
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at top, #0f172a 0%, var(--bg) 50%);
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 16px;
+        padding: 2rem 2.5rem;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+      }
+      h1 { margin: 0 0 0.75rem; font-size: 1.7rem; }
+      p { margin: 0; color: var(--muted); }
+      a { color: #38bdf8; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Redirecting to AghanySpot</h1>
+      <p>
+        If you are not redirected automatically,
+        <a href="https://app.aghanyspot.fun/">click here</a>.
+      </p>
+    </div>
+  </body>
+</html>

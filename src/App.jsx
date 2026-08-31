@@ -784,10 +784,16 @@ export default function App() {
               onChange={(event) => setChallengeRoundsInput(Number(event.target.value) || 1)}
             />
             <div className="challenge-modal__actions">
-              <button type="button" className="btn btn--ghost" onClick={() => setChallengeModalOpen(false)}>
+              <button type="button" className="btn btn--ghost" onClick={() => {
+                playUiClick();
+                setChallengeModalOpen(false);
+              }}>
                 Cancel
               </button>
-              <button type="button" className="btn btn--primary" onClick={confirmChallenge}>
+              <button type="button" className="btn btn--primary" onClick={() => {
+                playUiClick();
+                confirmChallenge();
+              }}>
                 Create challenge
               </button>
             </div>
