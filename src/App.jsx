@@ -142,6 +142,7 @@ export default function App() {
   const [challengeSummary, setChallengeSummary] = useState(null);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [challengeRoundsInput, setChallengeRoundsInput] = useState(5);
+  const [challengeError, setChallengeError] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copyToast, setCopyToast] = useState('');
   const challengeRoundStartedAt = useRef(Date.now());
@@ -481,12 +482,21 @@ export default function App() {
 
   const openChallengeModal = () => {
     setChallengeRoundsInput(5);
+    setChallengeError('');
     setChallengeModalOpen(true);
     setMobileMenuOpen(false);
   };
 
   const confirmChallenge = () => {
-    const rounds = Math.min(25, Math.max(1, Number(challengeRoundsInput) || 5));
+    const parsedValue = Number(challengeRoundsInput);
+    const rounds = Number.isFinite(parsedValue) ? Math.trunc(parsedValue) : 0;
+
+    if (rounds < 1 || rounds > 25) {
+      setChallengeError('Max is 25 rounds.');
+      return;
+    }
+
+    setChallengeError('');
     const trackIds = buildChallengeSequence(rounds, Date.now());
     const payload = {
       rounds,
@@ -823,8 +833,25 @@ export default function App() {
               min="1"
               max="25"
               value={challengeRoundsInput}
-              onChange={(event) => setChallengeRoundsInput(Number(event.target.value) || 1)}
+              onChange={(event) => {
+                const rawValue = Number(event.target.value);
+                if (event.target.value === '') {
+                  setChallengeRoundsInput(1);
+                  setChallengeError('Max is 25 rounds.');
+                  return;
+                }
+
+                if (rawValue > 25) {
+                  setChallengeRoundsInput(25);
+                  setChallengeError('Max is 25 rounds.');
+                  return;
+                }
+
+                setChallengeRoundsInput(Math.max(1, rawValue || 1));
+                setChallengeError('');
+              }}
             />
+            {challengeError && <p className="challenge-modal__error">{challengeError}</p>}
             <div className="challenge-modal__actions">
               <button type="button" className="btn btn--ghost" onClick={() => {
                 playUiClick();

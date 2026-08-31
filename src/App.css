@@ -1017,6 +1017,13 @@
   color: var(--text-muted);
 }
 
+.challenge-modal__error {
+  margin: -4px 0 0;
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .challenge-modal input {
   width: 100%;
   padding: 12px 14px;
@@ -1116,6 +1123,20 @@
 
   .header {
     padding-top: 52px;
+  }
+
+  .challenge-modal {
+    width: min(92vw, 420px);
+    padding: 18px 16px 14px;
+  }
+
+  .challenge-modal__actions {
+    flex-direction: column-reverse;
+  }
+
+  .challenge-modal__actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .header__badge {
