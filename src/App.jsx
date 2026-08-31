@@ -162,7 +162,6 @@ export default function App() {
   const [challengeStatus, setChallengeStatus] = useState('idle');
   const [challengeOpponentResults, setChallengeOpponentResults] = useState([]);
   const [roundFeedback, setRoundFeedback] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copyToast, setCopyToast] = useState('');
   const challengeRoundStartedAt = useRef(Date.now());
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -531,7 +530,7 @@ export default function App() {
     setChallengeResults([]);
     setChallengeSummary(null);
     setChallengeStatus('idle');
-    setShowChallengeModal?.(false);
+    setChallengeModalOpen(false);
     setGameStatus('PLAYING');
     setStep(0);
     setGuesses([]);
@@ -606,7 +605,6 @@ export default function App() {
     setChallengeRoundsInput(5);
     setChallengeError('');
     setChallengeModalOpen(true);
-    setMobileMenuOpen(false);
   };
 
   const confirmChallenge = () => {
@@ -666,8 +664,6 @@ export default function App() {
   const summaryOpponent = challengeSummary?.opponent || { total: 0, roundTotal: 0, guessed: [], missed: [] };
   const isChallengeRoundsValid = Number.isInteger(challengeRoundsInput) && challengeRoundsInput >= 1 && challengeRoundsInput <= 25;
   const isChallengeHost = Boolean(challengeConfig?.host);
-  const canStartChallenge = challengeStatus === 'waiting' && isChallengeHost && Boolean(challengeConfig?.joined);
-  const canJoinChallenge = challengeStatus === 'waiting' && !isChallengeHost;
 
   const challengeButtonLabel = is1v1Mode && challengeStatus === 'waiting' ? (isChallengeHost ? 'Challenge' : 'Waiting') : 'Challenge a Friend';
 

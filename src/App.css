@@ -231,6 +231,10 @@
   z-index: 30;
 }
 
+.header__actions .theme-toggle {
+  position: static;
+}
+
 .challenge-header-btn {
   display: inline-flex;
   align-items: center;
@@ -244,6 +248,7 @@
   cursor: pointer;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .round-feedback {
@@ -1066,7 +1071,8 @@
   justify-content: center;
   padding: 20px;
   background: rgba(0, 0, 0, 0.7);
-  z-index: 100;
+  z-index: 1000;
+  touch-action: manipulation;
 }
 
 .challenge-modal {
@@ -1079,6 +1085,7 @@
   border-radius: 18px;
   padding: 22px 20px 18px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  touch-action: manipulation;
 }
 
 .challenge-modal h3 {
