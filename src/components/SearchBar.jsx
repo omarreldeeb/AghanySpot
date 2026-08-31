@@ -9,6 +9,7 @@ export default function SearchBar({
   onSelect,
   onSkip,
   onUiClick,
+  disabled = false,
 }) {
   return (
     <div className="search-bar">
@@ -18,6 +19,7 @@ export default function SearchBar({
           <input
             type="text"
             value={query}
+            disabled={disabled}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Name that track"
             className="search-bar__input"
@@ -28,7 +30,9 @@ export default function SearchBar({
         <button
           type="button"
           className="search-bar__skip"
+          disabled={disabled}
           onClick={() => {
+            if (disabled) return;
             onUiClick?.();
             onSkip();
           }}

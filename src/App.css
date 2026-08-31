@@ -236,7 +236,7 @@
   border-radius: 12px;
   background: var(--surface-elevated);
   cursor: pointer;
-  z-index: 40;
+  z-index: 80;
   touch-action: manipulation;
   pointer-events: auto;
 }
@@ -262,7 +262,7 @@
   border-radius: 14px;
   background: rgba(17, 17, 19, 0.96);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-  z-index: 50;
+  z-index: 90;
   touch-action: manipulation;
   pointer-events: auto;
 }
@@ -709,6 +709,12 @@
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
+}
+
+.search-bar__skip:disabled,
+.search-bar__input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .search-bar__skip:hover {

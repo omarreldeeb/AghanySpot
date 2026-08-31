@@ -269,13 +269,14 @@ export default function App() {
     const payload = decodeChallengePayload(encoded);
     if (!payload || !Array.isArray(payload.trackIds) || payload.trackIds.length === 0) return;
 
+    const guestPayload = { ...payload, host: false, joined: false };
     setIs1v1Mode(true);
-    setChallengeConfig(payload);
+    setChallengeConfig(guestPayload);
     setChallengeQueue(payload.trackIds);
     setChallengeRoundIndex(0);
     setChallengeResults([]);
     setChallengeSummary(null);
-    setChallengeStatus('playing');
+    setChallengeStatus('waiting');
     setGameStatus('PLAYING');
     setStep(0);
     setQuery('');
@@ -526,6 +527,8 @@ export default function App() {
       challengeId: `challenge-${Date.now()}`,
       challengerId: `challenger-${Math.random().toString(36).slice(2, 10)}`,
       seed: `${Date.now()}`,
+      host: true,
+      joined: false,
     };
 
     setChallengeConfig(payload);
@@ -550,6 +553,9 @@ export default function App() {
   const summaryPlayer = challengeSummary?.player || { total: 0, roundTotal: 0, guessed: [], missed: [] };
   const summaryOpponent = challengeSummary?.opponent || { total: 0, roundTotal: 0, guessed: [], missed: [] };
   const isChallengeRoundsValid = Number.isInteger(challengeRoundsInput) && challengeRoundsInput >= 1 && challengeRoundsInput <= 25;
+  const isChallengeHost = Boolean(challengeConfig?.host);
+  const canStartChallenge = challengeStatus === 'waiting' && isChallengeHost && Boolean(challengeConfig?.joined);
+  const canJoinChallenge = challengeStatus === 'waiting' && !isChallengeHost;
 
   return (
     <div className={`app ${isDarkMode ? 'app--dark' : 'app--light'}`}>
@@ -746,19 +752,46 @@ export default function App() {
 
             {is1v1Mode && challengeStatus === 'waiting' && (
               <div className="challenge-waiting-bar">
-                <div className="challenge-waiting-bar__text">Waiting for opponent to join</div>
+                <div className="challenge-waiting-bar__text">
+                  {isChallengeHost ? 'Waiting for opponent to join' : 'Challenge link received'}
+                </div>
                 <button type="button" className="btn btn--ghost" onClick={() => {
                   playUiClick();
                   shareChallengeLink();
                 }}>
                   Copy link
                 </button>
-                <button type="button" className="btn btn--primary" onClick={() => {
-                  playUiClick();
-                  setChallengeStatus('playing');
-                }}>
-                  Start challenge
-                </button>
+                {isChallengeHost ? (
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    disabled={!challengeConfig?.joined}
+                    onClick={() => {
+                      playUiClick();
+                      if (challengeConfig?.joined) {
+                        setChallengeStatus('playing');
+                      }
+                    }}
+                  >
+                    Start challenge
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    onClick={() => {
+                      playUiClick();
+                      const payload = { ...challengeConfig, joined: true, host: false };
+                      setChallengeConfig(payload);
+                      setChallengeStatus('playing');
+                      const url = new URL(window.location.href);
+                      url.searchParams.set('challenge', encodeChallengePayload(payload));
+                      window.history.replaceState({}, '', url.toString());
+                    }}
+                  >
+                    Join challenge
+                  </button>
+                )}
               </div>
             )}
 
@@ -838,6 +871,7 @@ export default function App() {
                   query={query}
                   suggestions={suggestions}
                   step={step}
+                  disabled={is1v1Mode && challengeStatus !== 'playing'}
                   onQueryChange={setQuery}
                   onSelect={submitGuess}
                   onSkip={handleSkip}
