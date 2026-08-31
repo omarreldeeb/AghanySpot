@@ -133,11 +133,6 @@ export default function GameResult({ status, song, onNext, onReplayFull, onPause
           </div>
 
           <div className="game-result__actions">
-            {!isPlaying && (
-              <button type="button" className="btn btn--ghost" onClick={onReplayFull}>
-                Listen to full track
-              </button>
-            )}
             <button type="button" className="btn btn--primary" onClick={onNext}>
               <RefreshCw size={16} />
               Next

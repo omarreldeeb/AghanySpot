@@ -76,8 +76,11 @@ export default function PlayerDisc({
   }, [isPlaying, unlocked, clipDuration, audioRef]);
 
   const handlePlay = () => {
+    if (isPlaying && clipDuration <= 0.1) return;
     onPlay();
   };
+
+  const shortClipLocked = isPlaying && clipDuration <= 0.1;
 
   return (
     <div className="player-section">
@@ -92,6 +95,7 @@ export default function PlayerDisc({
         <button
           type="button"
           className="disc-play-btn"
+          disabled={shortClipLocked}
           onClick={isPlaying ? onPause : handlePlay}
           aria-label={isPlaying ? 'Pause' : 'Play clip'}
         >

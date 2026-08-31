@@ -190,6 +190,7 @@ export default function App() {
     } else if (step + 1 >= CLIP_DURATIONS.length) {
       setGameStatus('LOST');
       unlock();
+      playFull();
     } else {
       setStep((prev) => prev + 1);
     }
@@ -202,6 +203,7 @@ export default function App() {
     if (step + 1 >= CLIP_DURATIONS.length) {
       setGameStatus('LOST');
       unlock();
+      playFull();
     } else {
       setStep((prev) => prev + 1);
     }
