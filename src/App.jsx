@@ -143,6 +143,7 @@ export default function App() {
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [challengeRoundsInput, setChallengeRoundsInput] = useState(5);
   const [challengeError, setChallengeError] = useState('');
+  const [challengeStatus, setChallengeStatus] = useState('idle');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copyToast, setCopyToast] = useState('');
   const challengeRoundStartedAt = useRef(Date.now());
@@ -274,6 +275,7 @@ export default function App() {
     setChallengeRoundIndex(0);
     setChallengeResults([]);
     setChallengeSummary(null);
+    setChallengeStatus('playing');
     setGameStatus('PLAYING');
     setStep(0);
     setQuery('');
@@ -281,13 +283,14 @@ export default function App() {
   }, []);
 
   const handlePlay = useCallback(() => {
+    if (is1v1Mode && challengeStatus !== 'playing') return;
     if (gameStatus !== 'PLAYING') {
       resumeFull();
     } else {
       // always start snippet playback from the start of the track
       playSnippet(step, loopEnabled);
     }
-  }, [audioRef, gameStatus, loopEnabled, playSnippet, resumeFull, step]);
+  }, [audioRef, gameStatus, is1v1Mode, challengeStatus, loopEnabled, playSnippet, resumeFull, step]);
 
   const playUiClick = useCallback(() => {
     const ctx = getClickAudioContext();
@@ -312,6 +315,7 @@ export default function App() {
   }, [volume]);
 
   const handleLoopToggle = () => {
+    if (is1v1Mode && challengeStatus !== 'playing') return;
     setLoopEnabled((enabled) => {
       const nextEnabled = !enabled;
       setLooping(nextEnabled);
@@ -378,31 +382,36 @@ export default function App() {
   const handleSkip = () => {
     if (gameStatus !== 'PLAYING') return;
 
-    if (is1v1Mode && challengeConfig) {
-      const roundDuration = Number(((Date.now() - challengeRoundStartedAt.current) / 1000).toFixed(1));
-      const nextResults = [...challengeResults, {
-        title: currentSong.title,
-        correct: false,
-        seconds: roundDuration,
-      }];
-      setChallengeResults(nextResults);
+    if (is1v1Mode && challengeConfig && challengeStatus === 'playing') {
+      if (step + 1 >= CLIP_DURATIONS.length) {
+        const roundDuration = Number(((Date.now() - challengeRoundStartedAt.current) / 1000).toFixed(1));
+        const nextResults = [...challengeResults, {
+          title: currentSong.title,
+          correct: false,
+          seconds: roundDuration,
+        }];
+        setChallengeResults(nextResults);
 
-      if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
-        setChallengeSummary(buildChallengeSummary(challengeConfig, nextResults));
+        if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
+          setChallengeSummary(buildChallengeSummary(challengeConfig, nextResults));
+          setQuery('');
+          setSuggestions([]);
+          return;
+        }
+
+        setChallengeRoundIndex((prev) => prev + 1);
+        setStep(0);
         setQuery('');
         setSuggestions([]);
         return;
       }
 
-      setChallengeRoundIndex((prev) => prev + 1);
-      setStep(0);
-      setQuery('');
-      setSuggestions([]);
+      pause();
+      setStep((prev) => prev + 1);
       return;
     }
 
     pause();
-    // advance the clip step but do not record skips in the visible guess history
     if (step + 1 >= CLIP_DURATIONS.length) {
       setGameStatus('LOST');
       unlock();
@@ -419,6 +428,7 @@ export default function App() {
     setChallengeRoundIndex(0);
     setChallengeResults([]);
     setChallengeSummary(null);
+    setChallengeStatus('idle');
     setShowChallengeModal?.(false);
     setGameStatus('PLAYING');
     setStep(0);
@@ -480,6 +490,18 @@ export default function App() {
 
   const currentSongForView = is1v1Mode ? challengeCurrentSong : currentSong;
 
+  const shareChallengeLink = useCallback(() => {
+    if (!challengeConfig) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('challenge', encodeChallengePayload(challengeConfig));
+    const link = url.toString();
+    navigator.clipboard?.writeText(link).catch(() => {});
+    setCopyToast('Challenge link copied to clipboard!');
+    setTimeout(() => setCopyToast(''), 2200);
+    window.history.replaceState({}, '', url.toString());
+    return link;
+  }, [challengeConfig]);
+
   const openChallengeModal = () => {
     setChallengeRoundsInput(5);
     setChallengeError('');
@@ -506,26 +528,23 @@ export default function App() {
       seed: `${Date.now()}`,
     };
 
-    const url = new URL(window.location.href);
-    url.searchParams.set('challenge', encodeChallengePayload(payload));
-    const link = url.toString();
-
-    navigator.clipboard?.writeText(link).catch(() => {});
-    setCopyToast('Challenge link copied to clipboard!');
-    setTimeout(() => setCopyToast(''), 2200);
-
     setChallengeConfig(payload);
     setChallengeQueue(trackIds);
     setChallengeRoundIndex(0);
     setChallengeResults([]);
     setChallengeSummary(null);
+    setChallengeStatus('waiting');
     setIs1v1Mode(true);
     setChallengeModalOpen(false);
     setGameStatus('PLAYING');
     setStep(0);
     setQuery('');
     setSuggestions([]);
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('challenge', encodeChallengePayload(payload));
     window.history.replaceState({}, '', url.toString());
+    shareChallengeLink();
   };
 
   const summaryPlayer = challengeSummary?.player || { total: 0, roundTotal: 0, guessed: [], missed: [] };
@@ -724,6 +743,24 @@ export default function App() {
               <h1 className="header__title">AghanySpot</h1>
               <p className="header__subtitle">{is1v1Mode ? `1v1 Round ${challengeRoundIndex + 1}/${challengeConfig?.rounds || 1}` : 'Guess the Song'}</p>
             </header>
+
+            {is1v1Mode && challengeStatus === 'waiting' && (
+              <div className="challenge-waiting-bar">
+                <div className="challenge-waiting-bar__text">Waiting for opponent to join</div>
+                <button type="button" className="btn btn--ghost" onClick={() => {
+                  playUiClick();
+                  shareChallengeLink();
+                }}>
+                  Copy link
+                </button>
+                <button type="button" className="btn btn--primary" onClick={() => {
+                  playUiClick();
+                  setChallengeStatus('playing');
+                }}>
+                  Start challenge
+                </button>
+              </div>
+            )}
 
             <div className="card">
               {showStandardControls && (
