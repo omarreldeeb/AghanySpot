@@ -15,6 +15,7 @@ export default function PlayerDisc({
   playbackId,
   loopEnabled,
   onLoopToggle,
+  onUiClick,
 }) {
   const [progress, setProgress] = useState(0);
   const rafRef = useRef(null);
@@ -96,7 +97,13 @@ export default function PlayerDisc({
           type="button"
           className="disc-play-btn"
           disabled={shortClipLocked}
-          onClick={isPlaying ? onPause : handlePlay}
+          onClick={() => {
+            if (isPlaying) {
+              onPause();
+              return;
+            }
+            handlePlay();
+          }}
           aria-label={isPlaying ? 'Pause' : 'Play clip'}
         >
           {isPlaying ? (
@@ -115,7 +122,10 @@ export default function PlayerDisc({
         <button
           type="button"
           className={`loop-toggle ${loopEnabled ? 'loop-toggle--active' : ''}`}
-          onClick={onLoopToggle}
+          onClick={() => {
+            onUiClick?.();
+            onLoopToggle();
+          }}
           aria-pressed={loopEnabled}
           title="Repeat this clip"
         >

@@ -9,7 +9,24 @@ import SearchBar from './components/SearchBar';
 import GameResult from './components/GameResult';
 import './App.css';
 
-const CLICK_SOUND_URL = new URL('../Songs/Click.mp3', import.meta.url).href;
+const audioContextRef = { current: null };
+
+function getClickAudioContext() {
+  if (typeof window === 'undefined') return null;
+
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtor) return null;
+
+  if (!audioContextRef.current) {
+    audioContextRef.current = new AudioCtor();
+  }
+
+  if (audioContextRef.current.state === 'suspended') {
+    audioContextRef.current.resume().catch(() => {});
+  }
+
+  return audioContextRef.current;
+}
 
 function randInt(max, exclude = -1) {
   if (max <= 1) return 0;
@@ -163,26 +180,25 @@ export default function App() {
   }, [audioRef, gameStatus, loopEnabled, playSnippet, resumeFull, step]);
 
   const playUiClick = useCallback(() => {
-    try {
-      const audio = new Audio(CLICK_SOUND_URL);
-      audio.preload = 'auto';
-      audio.volume = Math.min(1, volume * 0.28);
-      audio.playbackRate = 1.08;
-      audio.currentTime = 0;
-      void audio.play().catch(() => {
-        try {
-          const fallback = new Audio(CLICK_SOUND_URL);
-          fallback.preload = 'auto';
-          fallback.volume = Math.min(1, volume * 0.28);
-          fallback.playbackRate = 1.08;
-          void fallback.play().catch(() => {});
-        } catch {
-          // Ignore browser playback restrictions.
-        }
-      });
-    } catch {
-      // Ignore browser playback restrictions.
-    }
+    const ctx = getClickAudioContext();
+    if (!ctx) return;
+
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.type = 'square';
+    oscillator.frequency.setValueAtTime(900, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.07);
+
+    gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(Math.min(1, volume * 0.12), ctx.currentTime + 0.005);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.09);
   }, [volume]);
 
   const handleLoopToggle = () => {

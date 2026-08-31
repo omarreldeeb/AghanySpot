@@ -8,6 +8,7 @@ export default function SearchBar({
   onQueryChange,
   onSelect,
   onSkip,
+  onUiClick,
 }) {
   return (
     <div className="search-bar">
@@ -24,7 +25,14 @@ export default function SearchBar({
             spellCheck={false}
           />
         </div>
-        <button type="button" className="search-bar__skip" onClick={onSkip}>
+        <button
+          type="button"
+          className="search-bar__skip"
+          onClick={() => {
+            onUiClick?.();
+            onSkip();
+          }}
+        >
           <SkipForward size={16} />
           <span>{step === CLIP_DURATIONS.length - 1 ? 'Give up' : 'Skip'}</span>
         </button>
@@ -34,7 +42,13 @@ export default function SearchBar({
         <ul className="search-bar__dropdown">
           {suggestions.map((song) => (
             <li key={song.id}>
-              <button type="button" onClick={() => onSelect(song)}>
+              <button
+                type="button"
+                onClick={() => {
+                  onUiClick?.();
+                  onSelect(song);
+                }}
+              >
                 <span className="search-bar__title">{song.title}</span>
                 <span className="search-bar__artist">{song.artist}</span>
                 <span className="search-bar__arabic" dir="rtl">

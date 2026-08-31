@@ -2,7 +2,7 @@ import { Pause, Play, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { COVERS, normalizeName } from '../data/covers';
 
-export default function GameResult({ status, song, onNext, onReplayFull, onPause, isPlaying }) {
+export default function GameResult({ status, song, onNext, onReplayFull, onPause, isPlaying, onUiClick }) {
   const won = status === 'WON';
   const [cover, setCover] = useState(null);
 
@@ -122,7 +122,13 @@ export default function GameResult({ status, song, onNext, onReplayFull, onPause
               <button
                 type="button"
                 className="game-result__play"
-                onClick={isPlaying ? onPause : onReplayFull}
+                onClick={() => {
+                  if (!isPlaying) {
+                    onReplayFull();
+                    return;
+                  }
+                  onPause();
+                }}
                 aria-label={isPlaying ? 'Pause song' : 'Play song'}
               >
                 {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
@@ -133,7 +139,14 @@ export default function GameResult({ status, song, onNext, onReplayFull, onPause
           </div>
 
           <div className="game-result__actions">
-            <button type="button" className="btn btn--primary" onClick={onNext}>
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => {
+                onUiClick?.();
+                onNext();
+              }}
+            >
               <RefreshCw size={16} />
               Next
             </button>
