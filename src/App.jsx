@@ -491,7 +491,7 @@ export default function App() {
     const parsedValue = Number(challengeRoundsInput);
     const rounds = Number.isFinite(parsedValue) ? Math.trunc(parsedValue) : 0;
 
-    if (rounds < 1 || rounds > 25) {
+    if (!Number.isInteger(parsedValue) || rounds < 1 || rounds > 25) {
       setChallengeError('Max is 25 rounds.');
       return;
     }
@@ -530,6 +530,7 @@ export default function App() {
 
   const summaryPlayer = challengeSummary?.player || { total: 0, roundTotal: 0, guessed: [], missed: [] };
   const summaryOpponent = challengeSummary?.opponent || { total: 0, roundTotal: 0, guessed: [], missed: [] };
+  const isChallengeRoundsValid = Number.isInteger(challengeRoundsInput) && challengeRoundsInput >= 1 && challengeRoundsInput <= 25;
 
   return (
     <div className={`app ${isDarkMode ? 'app--dark' : 'app--light'}`}>
@@ -830,24 +831,27 @@ export default function App() {
             <input
               id="challenge-rounds"
               type="number"
+              step="1"
               min="1"
               max="25"
               value={challengeRoundsInput}
               onChange={(event) => {
-                const rawValue = Number(event.target.value);
-                if (event.target.value === '') {
+                const rawInput = event.target.value;
+                const rawValue = Number(rawInput);
+
+                if (rawInput === '') {
                   setChallengeRoundsInput(1);
                   setChallengeError('Max is 25 rounds.');
                   return;
                 }
 
-                if (rawValue > 25) {
-                  setChallengeRoundsInput(25);
+                if (!Number.isInteger(rawValue) || rawValue < 1 || rawValue > 25) {
+                  setChallengeRoundsInput(Math.min(25, Math.max(1, Math.trunc(rawValue || 1))));
                   setChallengeError('Max is 25 rounds.');
                   return;
                 }
 
-                setChallengeRoundsInput(Math.max(1, rawValue || 1));
+                setChallengeRoundsInput(rawValue);
                 setChallengeError('');
               }}
             />
@@ -859,10 +863,15 @@ export default function App() {
               }}>
                 Cancel
               </button>
-              <button type="button" className="btn btn--primary" onClick={() => {
-                playUiClick();
-                confirmChallenge();
-              }}>
+              <button
+                type="button"
+                className="btn btn--primary"
+                disabled={!isChallengeRoundsValid}
+                onClick={() => {
+                  playUiClick();
+                  confirmChallenge();
+                }}
+              >
                 Create challenge
               </button>
             </div>
