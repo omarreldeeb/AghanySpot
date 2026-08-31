@@ -41,6 +41,7 @@ export default function App() {
   const [volume, setVolume] = useState(1);
   const [accent, setAccent] = useState(() => ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)]);
   const [loopEnabled, setLoopEnabled] = useState(false);
+  const clickAudioRef = useRef(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     try {
       return window.localStorage.getItem('aghanyspot-theme') !== 'light';
@@ -160,10 +161,21 @@ export default function App() {
     }
   }, [audioRef, gameStatus, loopEnabled, playSnippet, resumeFull, step]);
 
+  const playUiClick = useCallback(() => {
+    const audio = clickAudioRef.current;
+    if (!audio) return;
+
+    audio.volume = Math.min(1, volume * 0.28);
+    audio.playbackRate = 1.08;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  }, [volume]);
+
   const handleLoopToggle = () => {
     setLoopEnabled((enabled) => {
       const nextEnabled = !enabled;
       setLooping(nextEnabled);
+      playUiClick();
       return nextEnabled;
     });
   };
@@ -259,7 +271,10 @@ export default function App() {
                     selectedDifficulty === p && 'pill--active',
                   ]
                     .join(' ')}
-                  onClick={() => setSelectedDifficulty(p)}
+                  onClick={() => {
+                    playUiClick();
+                    setSelectedDifficulty(p);
+                  }}
                 >
                   {p}
                 </button>
@@ -268,7 +283,10 @@ export default function App() {
           </div>
 
           <div className="panel panel--bottom">
-            <button className="btn btn--ghost" onClick={rerollAll}>
+            <button className="btn btn--ghost" onClick={() => {
+              playUiClick();
+              rerollAll();
+            }}>
               Reroll all
             </button>
           </div>
@@ -279,7 +297,10 @@ export default function App() {
             <button
               type="button"
               className="theme-toggle"
-              onClick={() => setIsDarkMode((darkMode) => !darkMode)}
+              onClick={() => {
+                playUiClick();
+                setIsDarkMode((darkMode) => !darkMode);
+              }}
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               aria-pressed={!isDarkMode}
               title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -300,7 +321,10 @@ export default function App() {
                     className={['era-pill', selectedEra === era && 'era-pill--active']
                       .filter(Boolean)
                       .join(' ')}
-                    onClick={() => setSelectedEra(era)}
+                    onClick={() => {
+                      playUiClick();
+                      setSelectedEra(era);
+                    }}
                   >
                     {era}
                   </button>
@@ -314,7 +338,10 @@ export default function App() {
                     <button
                       key={d}
                       className={[cls, selectedDifficulty === d && 'badge--active'].filter(Boolean).join(' ')}
-                      onClick={() => setSelectedDifficulty(d)}
+                      onClick={() => {
+                        playUiClick();
+                        setSelectedDifficulty(d);
+                      }}
                     >
                       {d}
                     </button>
@@ -337,6 +364,7 @@ export default function App() {
               playbackId={playbackId}
               loopEnabled={loopEnabled}
               onLoopToggle={handleLoopToggle}
+              onUiClick={playUiClick}
             />
 
             <GuessHistory guesses={guesses} />
@@ -349,6 +377,7 @@ export default function App() {
                 onReplayFull={gameStatus === 'LOST' ? playFull : resumeFull}
                 onPause={pause}
                 isPlaying={isPlaying}
+                onUiClick={playUiClick}
               />
             )}
 
@@ -360,6 +389,7 @@ export default function App() {
                 onQueryChange={setQuery}
                 onSelect={submitGuess}
                 onSkip={handleSkip}
+                onUiClick={playUiClick}
               />
             )}
           </div>
@@ -385,9 +415,13 @@ export default function App() {
           role="alert"
         >
           <div className="toast__body">For this difficulty there are no songs for this era at this moment.</div>
-          <button className="toast__close" onClick={() => setNoMatchVisible(false)} aria-label="Dismiss">×</button>
+          <button className="toast__close" onClick={() => {
+            playUiClick();
+            setNoMatchVisible(false);
+          }} aria-label="Dismiss">×</button>
         </div>
       </div>
+      <audio ref={clickAudioRef} src="/Click.mp3" preload="auto" />
       <audio
         ref={audioRef}
         src={currentSong.src}
