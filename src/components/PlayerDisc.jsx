@@ -44,13 +44,15 @@ export default function PlayerDisc({
         return;
       }
 
-      const duration = clipDuration <= 0.1 ? SHORT_CLIP_PLAYBACK_DURATION : (audio.duration || clipDuration || 1);
+      const fullDuration = Number.isFinite(audio.duration) ? audio.duration : clipDuration || 1;
+      const duration = unlocked ? fullDuration : clipDuration || 1;
       const currentTime = audio.currentTime || 0;
-      const raw = Math.min(currentTime / Math.max(duration, 0.001), 1);
+      const targetDuration = clipDuration <= 0.1 ? SHORT_CLIP_PLAYBACK_DURATION : Math.max(duration, 0.001);
+      const raw = Math.min(currentTime / Math.max(targetDuration, 0.001), 1);
       const value = raw > 0.999 ? 1 : raw;
 
       const pct = Math.max(0, Math.min(100, value * 100));
-      if (fillRef.current && Math.abs(pct - lastWidth) > 0.01) {
+      if (fillRef.current && Math.abs(pct - lastWidth) > 0.05) {
         fillRef.current.style.width = `${pct}%`;
         fillRef.current.style.boxShadow = pct > 0 ? '0 0 18px var(--accent-glow)' : 'none';
         lastWidth = pct;

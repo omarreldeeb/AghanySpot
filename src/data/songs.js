@@ -285,5 +285,5 @@ export const EGYPTIAN_SONGS = [
 ];
 
 // Exact Songspot snippet durations (seconds)
-export const CLIP_DURATIONS = [0.1, 0.5, 2, 8, 15];
-export const SHORT_CLIP_PLAYBACK_DURATION = 0.1;
+export const CLIP_DURATIONS = [0.08, 0.5, 2, 8, 15];
+export const SHORT_CLIP_PLAYBACK_DURATION = 0.08;
