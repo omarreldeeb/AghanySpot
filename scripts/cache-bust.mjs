@@ -11,11 +11,10 @@ if (!fs.existsSync(htmlPath)) {
 
 const html = fs.readFileSync(htmlPath, 'utf8');
 const version = Date.now().toString(36);
-const updated = html.replace(/(assets\/[^"']+?\.(?:js|css))(?=["'])/g, (match) => {
-  const ext = path.extname(match);
-  const base = match.replace(new RegExp(`${ext}$`), '');
-  return `${base}-${version}${ext}`;
+const updated = html.replace(/(src|href)=["']([^"']+\.(?:js|css))["']/g, (match, attr, url) => {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${attr}="${url}${separator}v=${version}"`;
 });
 
 fs.writeFileSync(htmlPath, updated);
-console.log(`Cache-busted index.html with version ${version}`);
+console.log(`Versioned asset query cache-bust for index.html with version ${version}`);
