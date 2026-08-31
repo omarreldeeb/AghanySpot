@@ -142,6 +142,7 @@ export default function App() {
   const [challengeSummary, setChallengeSummary] = useState(null);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [challengeRoundsInput, setChallengeRoundsInput] = useState(5);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copyToast, setCopyToast] = useState('');
   const challengeRoundStartedAt = useRef(Date.now());
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -481,6 +482,7 @@ export default function App() {
   const openChallengeModal = () => {
     setChallengeRoundsInput(5);
     setChallengeModalOpen(true);
+    setMobileMenuOpen(false);
   };
 
   const confirmChallenge = () => {
@@ -654,6 +656,46 @@ export default function App() {
 
           <section className="stage">
             <header className="header">
+              <button
+                type="button"
+                className="mobile-menu-toggle"
+                onClick={() => {
+                  playUiClick();
+                  setMobileMenuOpen((open) => !open);
+                }}
+                aria-label="Open quick actions menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                <span />
+                <span />
+                <span />
+              </button>
+
+              <div className={`mobile-menu ${mobileMenuOpen ? 'mobile-menu--open' : ''}`}>
+                <button
+                  type="button"
+                  className="mobile-menu__item"
+                  onClick={() => {
+                    playUiClick();
+                    rerollAll();
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  Reroll all
+                </button>
+                <button
+                  type="button"
+                  className="mobile-menu__item"
+                  onClick={() => {
+                    playUiClick();
+                    openChallengeModal();
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  Challenge a Friend
+                </button>
+              </div>
+
               <button
                 type="button"
                 className="theme-toggle"
