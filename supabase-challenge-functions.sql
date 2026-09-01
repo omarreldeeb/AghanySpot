@@ -42,7 +42,7 @@ begin
     return query
     update public.challenge_rooms as rooms
     set host_results = submit_challenge_results.player_results,
-        status = case when rooms.guest_results is not null then 'complete' else 'waiting_results' end
+        status = case when rooms.guest_results is not null then 'complete' else 'playing' end
     where rooms.id = submit_challenge_results.room_id
       and rooms.status in ('playing', 'waiting_results')
     returning rooms.*;
@@ -50,7 +50,7 @@ begin
     return query
     update public.challenge_rooms as rooms
     set guest_results = submit_challenge_results.player_results,
-        status = case when rooms.host_results is not null then 'complete' else 'waiting_results' end
+        status = case when rooms.host_results is not null then 'complete' else 'playing' end
     where rooms.id = submit_challenge_results.room_id
       and rooms.guest_id is not null
       and rooms.status in ('playing', 'waiting_results')

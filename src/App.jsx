@@ -194,9 +194,11 @@ export default function App() {
   const [challengeRoomFull, setChallengeRoomFull] = useState(false);
   const [challengeDisconnectNotice, setChallengeDisconnectNotice] = useState('');
   const [challengeRematchRequested, setChallengeRematchRequested] = useState(false);
+  const [hasSubmittedChallengeResults, setHasSubmittedChallengeResults] = useState(false);
   const [roundFeedback, setRoundFeedback] = useState('');
   const [copyToast, setCopyToast] = useState('');
   const challengeRoundStartedAt = useRef(Date.now());
+  const challengeRoundLocked = useRef(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     try {
       return window.localStorage.getItem('aghanyspot-theme') !== 'light';
@@ -370,6 +372,7 @@ export default function App() {
     setChallengeResults([]);
     setChallengeSummary(null);
     setChallengeStatus(normalizedPayload.status || 'waiting');
+    setHasSubmittedChallengeResults(false);
     setChallengeOpponentResults(buildOpponentResults(normalizedPayload.trackIds, normalizedPayload.rounds, normalizedPayload.seed || Date.now()));
     setGameStatus('PLAYING');
     setStep(0);
@@ -450,7 +453,7 @@ export default function App() {
           status: nextPayload.status,
           host: current.host,
         }));
-        setChallengeStatus(nextPayload.status || 'waiting');
+        setChallengeStatus((currentStatus) => hasSubmittedChallengeResults ? currentStatus : (nextPayload.status || 'waiting'));
         if (nextPayload.status === 'complete' && nextPayload.hostResults && nextPayload.guestResults) {
           setChallengeSummary(buildChallengeSummary(
             challengeConfig,
@@ -480,7 +483,7 @@ export default function App() {
           status: nextPayload.status,
           host: current.host,
         }));
-        setChallengeStatus(nextPayload.status || 'waiting');
+        setChallengeStatus((currentStatus) => hasSubmittedChallengeResults ? currentStatus : (nextPayload.status || 'waiting'));
         if (nextPayload.status === 'complete' && nextPayload.hostResults && nextPayload.guestResults) {
           setChallengeSummary(buildChallengeSummary(
             challengeConfig,
@@ -495,7 +498,7 @@ export default function App() {
       window.clearInterval(pollRoom);
       if (channel) supabase.removeChannel(channel);
     };
-  }, [challengeConfig?.challengeId]);
+  }, [challengeConfig?.challengeId, hasSubmittedChallengeResults]);
 
   useEffect(() => {
     if (!supabase || !is1v1Mode || !challengeConfig?.challengeId) return undefined;
@@ -529,14 +532,14 @@ export default function App() {
   }, [challengeConfig?.challengeId, challengeConfig?.host, challengeConfig?.challengerId, is1v1Mode]);
 
   const handlePlay = useCallback(() => {
-    if (is1v1Mode && challengeStatus !== 'playing') return;
+    if (is1v1Mode && (challengeStatus !== 'playing' || hasSubmittedChallengeResults)) return;
     if (gameStatus !== 'PLAYING') {
       resumeFull();
     } else {
       // always start snippet playback from the start of the track
       playSnippet(step, loopEnabled);
     }
-  }, [audioRef, gameStatus, is1v1Mode, challengeStatus, loopEnabled, playSnippet, resumeFull, step]);
+  }, [audioRef, gameStatus, hasSubmittedChallengeResults, is1v1Mode, challengeStatus, loopEnabled, playSnippet, resumeFull, step]);
 
   const playUiClick = useCallback(() => {
     const ctx = getClickAudioContext();
@@ -561,7 +564,7 @@ export default function App() {
   }, [volume]);
 
   const handleLoopToggle = () => {
-    if (is1v1Mode && challengeStatus !== 'playing') return;
+    if (is1v1Mode && (challengeStatus !== 'playing' || hasSubmittedChallengeResults)) return;
     setLoopEnabled((enabled) => {
       const nextEnabled = !enabled;
       setLooping(nextEnabled);
@@ -572,11 +575,13 @@ export default function App() {
 
   const submitGuess = (selectedSong) => {
     if (gameStatus !== 'PLAYING') return;
+    if (is1v1Mode && (challengeStatus !== 'playing' || hasSubmittedChallengeResults || challengeRoundLocked.current)) return;
 
     const currentChallengeSong = is1v1Mode ? challengeCurrentSong : currentSong;
     const isCorrect = selectedSong.id === currentChallengeSong.id;
 
     if (is1v1Mode && challengeConfig) {
+      challengeRoundLocked.current = true;
       const roundDuration = Number(((Date.now() - challengeRoundStartedAt.current) / 1000).toFixed(1));
       const result = {
         title: currentChallengeSong.title,
@@ -590,9 +595,10 @@ export default function App() {
 
       window.setTimeout(() => {
         setRoundFeedback('');
-      }, 1200);
+      }, 2200);
 
       if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
+        setHasSubmittedChallengeResults(true);
         submitChallengeResults(nextResults);
         setGameStatus('PLAYING');
         setQuery('');
@@ -605,7 +611,8 @@ export default function App() {
       window.setTimeout(() => {
         setChallengeRoundIndex((prev) => prev + 1);
         setStep(0);
-      }, 1200);
+        challengeRoundLocked.current = false;
+      }, 2200);
       return;
     }
 
@@ -638,7 +645,8 @@ export default function App() {
 
     const currentChallengeSong = is1v1Mode ? challengeCurrentSong : currentSong;
 
-    if (is1v1Mode && challengeConfig && challengeStatus === 'playing') {
+    if (is1v1Mode && challengeConfig && challengeStatus === 'playing' && !hasSubmittedChallengeResults && !challengeRoundLocked.current) {
+      challengeRoundLocked.current = true;
       if (step + 1 >= CLIP_DURATIONS.length) {
         const roundDuration = Number(((Date.now() - challengeRoundStartedAt.current) / 1000).toFixed(1));
         const nextResults = [...challengeResults, {
@@ -651,9 +659,10 @@ export default function App() {
 
         window.setTimeout(() => {
           setRoundFeedback('');
-        }, 3200);
+        }, 2200);
 
         if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
+          setHasSubmittedChallengeResults(true);
           submitChallengeResults(nextResults);
           setQuery('');
           setSuggestions([]);
@@ -665,12 +674,14 @@ export default function App() {
           setStep(0);
           setQuery('');
           setSuggestions([]);
-        }, 3200);
+          challengeRoundLocked.current = false;
+        }, 2200);
         return;
       }
 
       pause();
       setStep((prev) => prev + 1);
+      challengeRoundLocked.current = false;
       return;
     }
 
@@ -692,7 +703,9 @@ export default function App() {
     setChallengeResults([]);
     setChallengeSummary(null);
     setChallengeStatus('idle');
+    setHasSubmittedChallengeResults(false);
     setChallengeRoomFull(false);
+    challengeRoundLocked.current = false;
     setChallengeDisconnectNotice('');
     setChallengeRematchRequested(false);
     setChallengeModalOpen(false);
@@ -860,6 +873,7 @@ export default function App() {
     if (isChallengeHost) resultPayload.hostResults = results;
     else resultPayload.guestResults = results;
     setChallengeStatus('waiting_results');
+    setHasSubmittedChallengeResults(true);
     setChallengeConfig(resultPayload);
 
     if (supabase) {
@@ -912,6 +926,8 @@ export default function App() {
     setStep(0);
     setGameStatus('PLAYING');
     setChallengeRematchRequested(false);
+    setHasSubmittedChallengeResults(false);
+    challengeRoundLocked.current = false;
   }, [challengeStatus, challengeSummary]);
 
   const challengeButtonLabel = is1v1Mode && challengeStatus === 'waiting' ? (isChallengeHost ? 'Challenge' : 'Waiting') : 'Challenge a Friend';
@@ -1278,7 +1294,7 @@ export default function App() {
                   query={query}
                   suggestions={suggestions}
                   step={step}
-                  disabled={is1v1Mode && challengeStatus !== 'playing'}
+                  disabled={is1v1Mode && (challengeStatus !== 'playing' || hasSubmittedChallengeResults)}
                   onQueryChange={setQuery}
                   onSelect={submitGuess}
                   onSkip={handleSkip}
