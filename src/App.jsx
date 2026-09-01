@@ -433,10 +433,11 @@ export default function App() {
     const payload = decodeChallengePayload(encoded);
     if (!payload || !Array.isArray(payload.trackIds) || payload.trackIds.length === 0) return;
 
-    const guestPayload = { ...payload, host: false, joined: Boolean(payload.joined) };
+    let hostOwnsChallenge = false;
     try {
       const storedRecord = window.localStorage.getItem(`aghanyspot-challenge:${payload.challengeId}`);
       const storedPayload = storedRecord ? JSON.parse(storedRecord) : null;
+      hostOwnsChallenge = Boolean(storedPayload?.host && storedPayload.challengerId === payload.challengerId);
       const playerId = window.sessionStorage.getItem('aghanyspot-player-id');
       if (storedPayload?.joined && storedPayload.joinedBy && storedPayload.joinedBy !== playerId) {
         setChallengeRoomFull(true);
@@ -446,6 +447,7 @@ export default function App() {
     } catch {
       // Continue with the invite payload when storage is unavailable.
     }
+    const guestPayload = { ...payload, host: hostOwnsChallenge, joined: Boolean(payload.joined) };
     applyChallengeRecord(guestPayload);
   }, []);
 
@@ -498,7 +500,10 @@ export default function App() {
           status: nextPayload.status,
           host: current.host,
         }));
-        setChallengeStatus((currentStatus) => hasSubmittedChallengeResults ? currentStatus : (nextPayload.status || 'waiting'));
+        setChallengeStatus((currentStatus) => {
+          if (hasSubmittedChallengeResults) return currentStatus;
+          return nextPayload.status === 'waiting_results' ? 'playing' : (nextPayload.status || 'waiting');
+        });
         if (nextPayload.status === 'complete' && nextPayload.hostResults && nextPayload.guestResults) {
           setChallengeSummary(buildChallengeSummary(
             challengeConfig,
@@ -528,7 +533,10 @@ export default function App() {
           status: nextPayload.status,
           host: current.host,
         }));
-        setChallengeStatus((currentStatus) => hasSubmittedChallengeResults ? currentStatus : (nextPayload.status || 'waiting'));
+        setChallengeStatus((currentStatus) => {
+          if (hasSubmittedChallengeResults) return currentStatus;
+          return nextPayload.status === 'waiting_results' ? 'playing' : (nextPayload.status || 'waiting');
+        });
         if (nextPayload.status === 'complete' && nextPayload.hostResults && nextPayload.guestResults) {
           setChallengeSummary(buildChallengeSummary(
             challengeConfig,
