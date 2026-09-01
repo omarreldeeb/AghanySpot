@@ -524,7 +524,7 @@ export default function App() {
           if (hasSubmittedChallengeResults) return currentStatus;
           return nextPayload.status === 'waiting_results' ? 'playing' : (nextPayload.status || 'waiting');
         });
-        if (nextPayload.status === 'complete' && nextPayload.hostResults && nextPayload.guestResults) {
+        if (nextPayload.status === 'complete' && hasSubmittedChallengeResults && challengeResults.length >= challengeConfig.rounds && nextPayload.hostResults && nextPayload.guestResults) {
           setChallengeSummary(buildChallengeSummary(
             challengeConfig,
             isChallengeHost ? nextPayload.hostResults : nextPayload.guestResults,
@@ -574,7 +574,7 @@ export default function App() {
           if (hasSubmittedChallengeResults) return currentStatus;
           return nextPayload.status === 'waiting_results' ? 'playing' : (nextPayload.status || 'waiting');
         });
-        if (nextPayload.status === 'complete' && nextPayload.hostResults && nextPayload.guestResults) {
+        if (nextPayload.status === 'complete' && hasSubmittedChallengeResults && challengeResults.length >= challengeConfig.rounds && nextPayload.hostResults && nextPayload.guestResults) {
           setChallengeSummary(buildChallengeSummary(
             challengeConfig,
             isChallengeHost ? nextPayload.hostResults : nextPayload.guestResults,
@@ -588,7 +588,7 @@ export default function App() {
       window.clearInterval(pollRoom);
       if (channel) supabase.removeChannel(channel);
     };
-  }, [challengeConfig?.challengeId, challengeRematchRequested, hasSubmittedChallengeResults]);
+  }, [challengeConfig?.challengeId, challengeConfig?.rounds, challengeRematchRequested, challengeResults.length, hasSubmittedChallengeResults]);
 
   useEffect(() => {
     if (!supabase || !is1v1Mode || !challengeConfig?.challengeId) return undefined;
