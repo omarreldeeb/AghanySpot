@@ -445,6 +445,7 @@ export default function App() {
     };
 
     loadRoom();
+    const pollRoom = window.setInterval(loadRoom, 2000);
     channel = supabase
       .channel(`challenge-room-${challengeConfig.challengeId}`)
       .on('postgres_changes', {
@@ -467,6 +468,7 @@ export default function App() {
       .subscribe();
 
     return () => {
+      window.clearInterval(pollRoom);
       if (channel) supabase.removeChannel(channel);
     };
   }, [challengeConfig?.challengeId]);
@@ -1000,6 +1002,7 @@ export default function App() {
                       playUiClick();
                       if (challengeConfig?.joined) {
                         setChallengeStatus('playing');
+                        setChallengeConfig((current) => ({ ...current, status: 'playing' }));
                         syncChallengeRecord({ ...challengeConfig, status: 'playing' }, 'playing');
                       }
                     }}
