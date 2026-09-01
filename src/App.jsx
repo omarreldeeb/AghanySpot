@@ -511,6 +511,7 @@ export default function App() {
         if (shouldApplyRoomQueue) setChallengeQueue(nextPayload.trackIds);
         setChallengeStatus((currentStatus) => {
           if (nextPayload.status === 'playing' && currentStatus === 'rematch_waiting') {
+            setChallengeRematchRequested(false);
             setHasSubmittedChallengeResults(false);
             setChallengeResults([]);
             setChallengeSummary(null);
@@ -560,6 +561,7 @@ export default function App() {
         if (shouldApplyRoomQueue) setChallengeQueue(nextPayload.trackIds);
         setChallengeStatus((currentStatus) => {
           if (nextPayload.status === 'playing' && currentStatus === 'rematch_waiting') {
+            setChallengeRematchRequested(false);
             setHasSubmittedChallengeResults(false);
             setChallengeResults([]);
             setChallengeSummary(null);
@@ -688,10 +690,10 @@ export default function App() {
 
       if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
         setHasSubmittedChallengeResults(true);
-        submitChallengeResults(nextResults);
         setGameStatus('PLAYING');
         setQuery('');
         setSuggestions([]);
+        window.setTimeout(() => submitChallengeResults(nextResults), 2200);
         return;
       }
 
@@ -752,9 +754,9 @@ export default function App() {
 
         if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
           setHasSubmittedChallengeResults(true);
-          submitChallengeResults(nextResults);
           setQuery('');
           setSuggestions([]);
+          window.setTimeout(() => submitChallengeResults(nextResults), 2200);
           return;
         }
 
@@ -1016,6 +1018,7 @@ export default function App() {
         }
         if (data?.[0]?.status === 'playing') {
           setChallengeStatus('playing');
+          setChallengeRematchRequested(false);
           setHasSubmittedChallengeResults(false);
           setChallengeResults([]);
           setChallengeSummary(null);
