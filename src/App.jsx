@@ -201,7 +201,7 @@ export default function App() {
   const [challengeResults, setChallengeResults] = useState([]);
   const [challengeSummary, setChallengeSummary] = useState(null);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
-  const [challengeRoundsInput, setChallengeRoundsInput] = useState(5);
+  const [challengeRoundsInput, setChallengeRoundsInput] = useState('');
   const [challengeError, setChallengeError] = useState('');
   const [challengeStatus, setChallengeStatus] = useState('idle');
   const [challengeOpponentResults, setChallengeOpponentResults] = useState([]);
@@ -608,7 +608,7 @@ export default function App() {
       })
       .on('presence', { event: 'leave' }, ({ key }) => {
         if (key !== playerId && opponentWasPresent) {
-          setChallengeDisconnectNotice('Your opponent disconnected.');
+          setChallengeDisconnectNotice('Opponent left');
         }
       })
       .subscribe(async (status) => {
@@ -860,7 +860,7 @@ export default function App() {
   }, [challengeConfig]);
 
   const openChallengeModal = () => {
-    setChallengeRoundsInput(5);
+    setChallengeRoundsInput('');
     setChallengeError('');
     setChallengeModalOpen(true);
   };
@@ -1498,14 +1498,15 @@ export default function App() {
               step="1"
               min="1"
               max="25"
+              placeholder="Enter rounds"
               value={challengeRoundsInput}
               onChange={(event) => {
                 const rawInput = event.target.value;
                 const rawValue = Number(rawInput);
 
                 if (rawInput === '') {
-                  setChallengeRoundsInput(1);
-                  setChallengeError('Max is 25 rounds.');
+                  setChallengeRoundsInput('');
+                  setChallengeError('Enter between 1 and 25 rounds.');
                   return;
                 }
 
