@@ -116,10 +116,10 @@ begin
     update public.challenge_rooms as rooms
     set host_rematch = case when rooms.guest_rematch then false else true end,
         guest_rematch = case when rooms.guest_rematch then false else rooms.guest_rematch end,
-        rematch_rounds = coalesce(rooms.rematch_rounds, request_challenge_rematch.rematch_rounds),
-        rematch_track_ids = coalesce(rooms.rematch_track_ids, request_challenge_rematch.rematch_track_ids),
-        rounds = case when rooms.guest_rematch then coalesce(rooms.rematch_rounds, request_challenge_rematch.rematch_rounds) else rooms.rounds end,
-        track_ids = case when rooms.guest_rematch then coalesce(rooms.rematch_track_ids, request_challenge_rematch.rematch_track_ids) else rooms.track_ids end,
+      rematch_rounds = request_challenge_rematch.rematch_rounds,
+      rematch_track_ids = request_challenge_rematch.rematch_track_ids,
+      rounds = case when rooms.guest_rematch then request_challenge_rematch.rematch_rounds else rooms.rounds end,
+      track_ids = case when rooms.guest_rematch then request_challenge_rematch.rematch_track_ids else rooms.track_ids end,
         status = case when rooms.guest_rematch then 'playing' else 'rematch_waiting' end,
         host_results = case when rooms.guest_rematch then null else rooms.host_results end,
         guest_results = case when rooms.guest_rematch then null else rooms.guest_results end

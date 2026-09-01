@@ -1140,7 +1140,8 @@ export default function App() {
                 className="btn btn--primary"
                 onClick={() => {
                   playUiClick();
-                  setRematchModalOpen(true);
+                  if (isChallengeHost) setRematchModalOpen(true);
+                  else requestChallengeRematch();
                 }}
                 disabled={challengeRematchRequested}
               >
