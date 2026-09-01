@@ -603,6 +603,10 @@ export default function App() {
       config: { presence: { key: playerId } },
     });
     presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const players = Object.keys(presenceChannel.presenceState());
+        if (players.some((key) => key !== playerId)) opponentWasPresent = true;
+      })
       .on('presence', { event: 'join' }, ({ key }) => {
         if (key !== playerId) opponentWasPresent = true;
       })
@@ -1113,6 +1117,12 @@ export default function App() {
               <div className="header__badge">1V1 Results</div>
               <h1 className="header__title">Challenge Complete</h1>
             </header>
+
+            {challengeDisconnectNotice && (
+              <div className="challenge-disconnect-notice" role="alert">
+                {challengeDisconnectNotice}
+              </div>
+            )}
 
             <div className="challenge-summary-grid">
               <div className="challenge-summary-card">
