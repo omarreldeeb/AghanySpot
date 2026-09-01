@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Users } from 'lucide-react';
 import { EGYPTIAN_SONGS, CLIP_DURATIONS } from './data/songs';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
 import ClipProgress from './components/ClipProgress';
@@ -237,6 +237,18 @@ export default function App() {
   }, [activePool.length, songIndex]);
 
   const currentSong = activePool[songIndex] || EGYPTIAN_SONGS[0];
+
+  const challengeSongMap = useMemo(
+    () => Object.fromEntries(EGYPTIAN_SONGS.map((song) => [song.id, song])),
+    [],
+  );
+
+  const challengeActiveSongList = useMemo(() => {
+    if (!is1v1Mode || challengeQueue.length === 0) return [];
+    return challengeQueue.map((songId) => challengeSongMap[songId]).filter(Boolean);
+  }, [challengeQueue, challengeSongMap, is1v1Mode]);
+
+  const challengeCurrentSong = challengeActiveSongList[challengeRoundIndex] || currentSong;
 
   useEffect(() => {
     setAccent((previous) => {
@@ -576,18 +588,7 @@ export default function App() {
     return ['Any era', ...Array.from(set)];
   }, []);
 
-  const challengeSongMap = useMemo(
-    () => Object.fromEntries(EGYPTIAN_SONGS.map((song) => [song.id, song])),
-    [],
-  );
-
-  const challengeActiveSongList = useMemo(() => {
-    if (!is1v1Mode || challengeQueue.length === 0) return [];
-    return challengeQueue.map((songId) => challengeSongMap[songId]).filter(Boolean);
-  }, [challengeQueue, challengeSongMap, is1v1Mode]);
-
   const showStandardControls = !is1v1Mode && !challengeSummary;
-  const challengeCurrentSong = challengeActiveSongList[challengeRoundIndex] || currentSong;
 
   const shareChallengeLink = useCallback(() => {
     if (!challengeConfig) return;
@@ -806,12 +807,15 @@ export default function App() {
                 <button
                   type="button"
                   className="challenge-header-btn"
+                  aria-label="Challenge a friend"
+                  title="Challenge a friend"
                   onClick={() => {
                     playUiClick();
                     openChallengeModal();
                   }}
                 >
-                  {challengeButtonLabel}
+                  <Users size={18} aria-hidden="true" />
+                  <span>{challengeButtonLabel}</span>
                 </button>
 
                 <button
