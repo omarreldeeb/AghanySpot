@@ -208,6 +208,8 @@ export default function App() {
   const [challengeRoomFull, setChallengeRoomFull] = useState(false);
   const [challengeDisconnectNotice, setChallengeDisconnectNotice] = useState('');
   const [challengeRematchRequested, setChallengeRematchRequested] = useState(false);
+  const [rematchModalOpen, setRematchModalOpen] = useState(false);
+  const [rematchRoundsInput, setRematchRoundsInput] = useState(5);
   const [hasSubmittedChallengeResults, setHasSubmittedChallengeResults] = useState(false);
   const [roundFeedback, setRoundFeedback] = useState('');
   const [copyToast, setCopyToast] = useState('');
@@ -971,11 +973,11 @@ export default function App() {
     syncChallengeRecord(resultPayload, 'waiting_results');
   }, [challengeConfig, isChallengeHost, syncChallengeRecord]);
 
-  const requestChallengeRematch = useCallback(() => {
-    if (!challengeConfig || challengeRematchRequested) return;
+  const requestChallengeRematch = useCallback((rematchConfig = challengeConfig) => {
+    if (!rematchConfig || challengeRematchRequested) return;
     setChallengeRematchRequested(true);
     const nextPayload = {
-      ...challengeConfig,
+      ...rematchConfig,
       status: 'rematch_waiting',
       ...(isChallengeHost ? { hostRematch: true } : { guestRematch: true }),
     };
@@ -983,8 +985,10 @@ export default function App() {
     setChallengeStatus('rematch_waiting');
     if (supabase) {
       supabase.rpc('request_challenge_rematch', {
-        room_id: challengeConfig.challengeId,
+        room_id: rematchConfig.challengeId,
         player_role: isChallengeHost ? 'host' : 'guest',
+        rematch_rounds: rematchConfig.rounds,
+        rematch_track_ids: rematchConfig.trackIds,
       }).then(({ data, error }) => {
         if (error) console.warn('Challenge rematch sync unavailable:', error.message);
         if (data?.[0]?.status === 'playing') {
@@ -997,11 +1001,28 @@ export default function App() {
           setGameStatus('PLAYING');
           challengeRoundLocked.current = false;
         }
+        if (data?.[0]?.track_ids) {
+          setChallengeQueue(data[0].track_ids);
+          setChallengeConfig((current) => ({ ...current, rounds: data[0].rounds, trackIds: data[0].track_ids }));
+        }
       });
     } else {
       syncChallengeRecord(nextPayload, 'rematch_waiting');
     }
   }, [challengeConfig, challengeRematchRequested, isChallengeHost, syncChallengeRecord]);
+
+  const startSelectedRematch = (rounds) => {
+    const safeRounds = Math.min(25, Math.max(1, Math.trunc(Number(rounds) || challengeConfig.rounds)));
+    const nextPayload = {
+      ...challengeConfig,
+      rounds: safeRounds,
+      trackIds: buildChallengeSequence(safeRounds, Date.now()),
+    };
+    setChallengeConfig(nextPayload);
+    setChallengeQueue(nextPayload.trackIds);
+    setRematchModalOpen(false);
+    requestChallengeRematch(nextPayload);
+  };
 
   const summaryPlayer = challengeSummary?.player || { total: 0, roundTotal: 0, guessed: [], missed: [] };
   const summaryOpponent = challengeSummary?.opponent || { total: 0, roundTotal: 0, guessed: [], missed: [] };
@@ -1119,7 +1140,7 @@ export default function App() {
                 className="btn btn--primary"
                 onClick={() => {
                   playUiClick();
-                  requestChallengeRematch();
+                  setRematchModalOpen(true);
                 }}
                 disabled={challengeRematchRequested}
               >
@@ -1456,6 +1477,24 @@ export default function App() {
                 }}
               >
                 Create challenge
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rematchModalOpen && (
+        <div className="challenge-modal-backdrop" onClick={() => setRematchModalOpen(false)}>
+          <div className="challenge-modal" onClick={(event) => event.stopPropagation()}>
+            <h3>How many rounds for the rematch?</h3>
+            <div className="challenge-modal__actions challenge-rematch-actions">
+              <button type="button" className="btn btn--primary" onClick={() => startSelectedRematch(challengeConfig.rounds)}>
+                Same rounds ({challengeConfig.rounds})
+              </button>
+              <label className="challenge-modal__label" htmlFor="rematch-rounds">Choose rounds</label>
+              <input id="rematch-rounds" type="number" min="1" max="25" step="1" value={rematchRoundsInput} onChange={(event) => setRematchRoundsInput(event.target.value)} />
+              <button type="button" className="btn btn--ghost" onClick={() => startSelectedRematch(rematchRoundsInput)}>
+                Use selected rounds
               </button>
             </div>
           </div>

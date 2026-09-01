@@ -2,7 +2,9 @@ alter table public.challenge_rooms
   add column if not exists host_results jsonb,
   add column if not exists guest_results jsonb,
   add column if not exists host_rematch boolean not null default false,
-  add column if not exists guest_rematch boolean not null default false;
+  add column if not exists guest_rematch boolean not null default false,
+  add column if not exists rematch_rounds integer,
+  add column if not exists rematch_track_ids jsonb;
 
 create or replace function public.start_challenge(
   room_id text,
@@ -96,6 +98,52 @@ end;
 $$;
 
 grant execute on function public.request_challenge_rematch(text, text) to anon;
+
+create or replace function public.request_challenge_rematch(
+  room_id text,
+  player_role text,
+  rematch_rounds integer,
+  rematch_track_ids jsonb
+)
+returns setof public.challenge_rooms
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if player_role = 'host' then
+    return query
+    update public.challenge_rooms as rooms
+    set host_rematch = case when rooms.guest_rematch then false else true end,
+        guest_rematch = case when rooms.guest_rematch then false else rooms.guest_rematch end,
+        rematch_rounds = coalesce(rooms.rematch_rounds, request_challenge_rematch.rematch_rounds),
+        rematch_track_ids = coalesce(rooms.rematch_track_ids, request_challenge_rematch.rematch_track_ids),
+        rounds = case when rooms.guest_rematch then coalesce(rooms.rematch_rounds, request_challenge_rematch.rematch_rounds) else rooms.rounds end,
+        track_ids = case when rooms.guest_rematch then coalesce(rooms.rematch_track_ids, request_challenge_rematch.rematch_track_ids) else rooms.track_ids end,
+        status = case when rooms.guest_rematch then 'playing' else 'rematch_waiting' end,
+        host_results = case when rooms.guest_rematch then null else rooms.host_results end,
+        guest_results = case when rooms.guest_rematch then null else rooms.guest_results end
+    where rooms.id = request_challenge_rematch.room_id
+    returning rooms.*;
+  elsif player_role = 'guest' then
+    return query
+    update public.challenge_rooms as rooms
+    set host_rematch = case when rooms.host_rematch then false else rooms.host_rematch end,
+        guest_rematch = case when rooms.host_rematch then false else true end,
+        rematch_rounds = coalesce(rooms.rematch_rounds, request_challenge_rematch.rematch_rounds),
+        rematch_track_ids = coalesce(rooms.rematch_track_ids, request_challenge_rematch.rematch_track_ids),
+        rounds = case when rooms.host_rematch then coalesce(rooms.rematch_rounds, request_challenge_rematch.rematch_rounds) else rooms.rounds end,
+        track_ids = case when rooms.host_rematch then coalesce(rooms.rematch_track_ids, request_challenge_rematch.rematch_track_ids) else rooms.track_ids end,
+        status = case when rooms.host_rematch then 'playing' else 'rematch_waiting' end,
+        host_results = case when rooms.host_rematch then null else rooms.host_results end,
+        guest_results = case when rooms.host_rematch then null else rooms.guest_results end
+    where rooms.id = request_challenge_rematch.room_id
+    returning rooms.*;
+  end if;
+end;
+$$;
+
+grant execute on function public.request_challenge_rematch(text, text, integer, jsonb) to anon;
 
 do $$
 begin
