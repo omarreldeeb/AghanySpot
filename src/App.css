@@ -94,6 +94,11 @@
   align-items: start;
 }
 
+.shell--challenge {
+  grid-template-columns: minmax(0, 760px);
+  justify-content: center;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;

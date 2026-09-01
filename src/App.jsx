@@ -759,7 +759,7 @@ export default function App() {
           </section>
         </main>
       ) : (
-        <main className="shell shell--cols">
+        <main className={`shell shell--cols ${is1v1Mode ? 'shell--challenge' : ''}`}>
           {showStandardControls && (
             <aside className="sidebar sidebar--left">
               <div className="panel">
