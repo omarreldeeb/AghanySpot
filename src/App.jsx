@@ -500,11 +500,14 @@ export default function App() {
           ...current,
           joined: nextPayload.joined,
           joinedBy: nextPayload.joinedBy,
+          rounds: nextPayload.rounds,
+          trackIds: nextPayload.trackIds,
           status: nextPayload.status,
           hostRematch: nextPayload.hostRematch,
           guestRematch: nextPayload.guestRematch,
           host: current.host,
         }));
+        setChallengeQueue(nextPayload.trackIds);
         setChallengeStatus((currentStatus) => {
           if (nextPayload.status === 'playing' && currentStatus === 'rematch_waiting') {
             setHasSubmittedChallengeResults(false);
@@ -545,11 +548,14 @@ export default function App() {
           ...current,
           joined: nextPayload.joined,
           joinedBy: nextPayload.joinedBy,
+          rounds: nextPayload.rounds,
+          trackIds: nextPayload.trackIds,
           status: nextPayload.status,
           hostRematch: nextPayload.hostRematch,
           guestRematch: nextPayload.guestRematch,
           host: current.host,
         }));
+        setChallengeQueue(nextPayload.trackIds);
         setChallengeStatus((currentStatus) => {
           if (nextPayload.status === 'playing' && currentStatus === 'rematch_waiting') {
             setHasSubmittedChallengeResults(false);
@@ -593,10 +599,11 @@ export default function App() {
       config: { presence: { key: playerId } },
     });
     presenceChannel
-      .on('presence', { event: 'sync' }, () => {
-        const players = Object.values(presenceChannel.presenceState()).flat();
-        if (players.length >= 2) opponentWasPresent = true;
-        if (opponentWasPresent && players.length < 2) {
+      .on('presence', { event: 'join' }, ({ key }) => {
+        if (key !== playerId) opponentWasPresent = true;
+      })
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        if (key !== playerId && opponentWasPresent) {
           setChallengeDisconnectNotice('Your opponent disconnected.');
         }
       })
