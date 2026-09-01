@@ -289,10 +289,10 @@ export const EGYPTIAN_SONGS = [
     arabicTitle: 'سنين',
     arabicArtist: 'توليت',
     era: '2020s',
-    difficulty: 'Easy',
+    difficulty: 'Medium',
     src: songSrc('Seneen - Tul8te.mp3'),
     cover: assetPath('Songs/Covers/Seneen - Tul8te.jpg'),
-    accent: '#ec4899',
+    accent: '#f59e0b',
   },
 ];
 
