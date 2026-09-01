@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Home, LogOut, Moon, Sun, Users } from 'lucide-react';
+import { Home, Lightbulb, LogOut, Moon, Sun, Users } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { EGYPTIAN_SONGS, CLIP_DURATIONS } from './data/songs';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
@@ -201,6 +201,9 @@ export default function App() {
   const [challengeResults, setChallengeResults] = useState([]);
   const [challengeSummary, setChallengeSummary] = useState(null);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
+  const [suggestionModalOpen, setSuggestionModalOpen] = useState(false);
+  const [suggestionForm, setSuggestionForm] = useState({ englishTitle: '', arabicTitle: '', singer: '' });
+  const [suggestionStatus, setSuggestionStatus] = useState('');
   const [challengeRoundsInput, setChallengeRoundsInput] = useState('');
   const [challengeError, setChallengeError] = useState('');
   const [challengeStatus, setChallengeStatus] = useState('idle');
@@ -869,6 +872,46 @@ export default function App() {
     setChallengeModalOpen(true);
   };
 
+  const submitSongSuggestion = async (event) => {
+    event.preventDefault();
+    const { englishTitle, arabicTitle, singer } = suggestionForm;
+    if (!englishTitle.trim() || !arabicTitle.trim() || !singer.trim()) {
+      setSuggestionStatus('Please complete all fields.');
+      return;
+    }
+
+    const webhookUrl = import.meta.env.VITE_DISCORD_WEBHOOK_URL;
+    if (!webhookUrl) {
+      setSuggestionStatus('Suggestions are temporarily unavailable.');
+      return;
+    }
+
+    setSuggestionStatus('Sending...');
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'AghanySpot Suggestions',
+          embeds: [{
+            title: 'New song suggestion',
+            color: 2263842,
+            fields: [
+              { name: 'English title', value: englishTitle.trim() },
+              { name: 'Arabic title', value: arabicTitle.trim() },
+              { name: 'Singer', value: singer.trim() },
+            ],
+          }],
+        }),
+      });
+      if (!response.ok) throw new Error('Suggestion request failed');
+      setSuggestionForm({ englishTitle: '', arabicTitle: '', singer: '' });
+      setSuggestionStatus('Thanks, your suggestion was sent.');
+    } catch {
+      setSuggestionStatus('Could not send suggestion. Please try again.');
+    }
+  };
+
   const confirmChallenge = () => {
     const parsedValue = Number(challengeRoundsInput);
     const rounds = Number.isFinite(parsedValue) ? Math.trunc(parsedValue) : 0;
@@ -1261,6 +1304,21 @@ export default function App() {
           <section className="stage">
             <header className="header">
               <div className="header__actions">
+                {!is1v1Mode && (
+                  <button
+                    type="button"
+                    className="challenge-header-btn suggestion-header-btn"
+                    aria-label="Suggest a song"
+                    title="Suggest a song"
+                    onClick={() => {
+                      playUiClick();
+                      setSuggestionStatus('');
+                      setSuggestionModalOpen(true);
+                    }}
+                  >
+                    <Lightbulb size={18} aria-hidden="true" />
+                  </button>
+                )}
                 {is1v1Mode && (
                   <button
                     type="button"
@@ -1551,6 +1609,26 @@ export default function App() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {suggestionModalOpen && (
+        <div className="challenge-modal-backdrop" onClick={() => setSuggestionModalOpen(false)}>
+          <form className="challenge-modal suggestion-modal" onClick={(event) => event.stopPropagation()} onSubmit={submitSongSuggestion}>
+            <h3>Suggest a song</h3>
+            <p className="suggestion-modal__note">Please write the song title in English and Arabic, and add the singer's name.</p>
+            <label className="challenge-modal__label" htmlFor="suggestion-english">English song name</label>
+            <input id="suggestion-english" value={suggestionForm.englishTitle} onChange={(event) => setSuggestionForm((current) => ({ ...current, englishTitle: event.target.value }))} placeholder="Song name in English" autoComplete="off" />
+            <label className="challenge-modal__label" htmlFor="suggestion-arabic">Arabic song name</label>
+            <input id="suggestion-arabic" dir="rtl" value={suggestionForm.arabicTitle} onChange={(event) => setSuggestionForm((current) => ({ ...current, arabicTitle: event.target.value }))} placeholder="اسم الأغنية بالعربية" autoComplete="off" />
+            <label className="challenge-modal__label" htmlFor="suggestion-singer">Singer name</label>
+            <input id="suggestion-singer" value={suggestionForm.singer} onChange={(event) => setSuggestionForm((current) => ({ ...current, singer: event.target.value }))} placeholder="Singer name" autoComplete="off" />
+            {suggestionStatus && <p className="challenge-modal__error suggestion-modal__status">{suggestionStatus}</p>}
+            <div className="challenge-modal__actions">
+              <button type="button" className="btn btn--ghost" onClick={() => setSuggestionModalOpen(false)}>Cancel</button>
+              <button type="submit" className="btn btn--primary">Send suggestion</button>
+            </div>
+          </form>
         </div>
       )}
 

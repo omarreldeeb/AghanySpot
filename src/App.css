@@ -1195,6 +1195,18 @@
   font-weight: 600;
 }
 
+.suggestion-modal__note {
+  margin: -6px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.suggestion-modal__status {
+  margin: -4px 0 0;
+  color: var(--accent);
+}
+
 .challenge-modal input {
   width: 100%;
   padding: 12px 14px;
