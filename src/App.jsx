@@ -161,6 +161,7 @@ export default function App() {
   const [challengeError, setChallengeError] = useState('');
   const [challengeStatus, setChallengeStatus] = useState('idle');
   const [challengeOpponentResults, setChallengeOpponentResults] = useState([]);
+  const [challengeRoomFull, setChallengeRoomFull] = useState(false);
   const [roundFeedback, setRoundFeedback] = useState('');
   const [copyToast, setCopyToast] = useState('');
   const challengeRoundStartedAt = useRef(Date.now());
@@ -347,6 +348,18 @@ export default function App() {
     if (!payload || !Array.isArray(payload.trackIds) || payload.trackIds.length === 0) return;
 
     const guestPayload = { ...payload, host: false, joined: Boolean(payload.joined) };
+    try {
+      const storedRecord = window.localStorage.getItem(`aghanyspot-challenge:${payload.challengeId}`);
+      const storedPayload = storedRecord ? JSON.parse(storedRecord) : null;
+      const playerId = window.sessionStorage.getItem('aghanyspot-player-id');
+      if (storedPayload?.joined && storedPayload.joinedBy && storedPayload.joinedBy !== playerId) {
+        setChallengeRoomFull(true);
+      } else if (storedPayload?.joined && storedPayload.joinedBy === playerId) {
+        guestPayload.joined = true;
+      }
+    } catch {
+      // Continue with the invite payload when storage is unavailable.
+    }
     applyChallengeRecord(guestPayload);
   }, []);
 
@@ -360,7 +373,11 @@ export default function App() {
       try {
         const nextPayload = JSON.parse(event.newValue);
         if (!nextPayload) return;
-        setChallengeConfig((current) => ({ ...current, ...nextPayload }));
+        setChallengeConfig((current) => ({
+          ...current,
+          joined: Boolean(nextPayload.joined),
+          status: nextPayload.status || current.status,
+        }));
         if (nextPayload.joined === true && challengeStatus === 'waiting') {
           setChallengeConfig((current) => ({ ...current, joined: true }));
         }
@@ -542,6 +559,7 @@ export default function App() {
     setChallengeResults([]);
     setChallengeSummary(null);
     setChallengeStatus('idle');
+    setChallengeRoomFull(false);
     setChallengeModalOpen(false);
     setGameStatus('PLAYING');
     setStep(0);
@@ -635,6 +653,7 @@ export default function App() {
     setChallengeResults([]);
     setChallengeSummary(null);
     setChallengeOpponentResults(buildOpponentResults(trackIds, rounds, payload.seed));
+    setChallengeRoomFull(false);
     setChallengeStatus('waiting');
     setIs1v1Mode(true);
     setChallengeModalOpen(false);
@@ -651,7 +670,22 @@ export default function App() {
   };
 
   const setChallengeJoined = useCallback((joinedPayload) => {
+    const playerId = window.sessionStorage.getItem('aghanyspot-player-id') || `player-${Math.random().toString(36).slice(2, 10)}`;
+    window.sessionStorage.setItem('aghanyspot-player-id', playerId);
+    const storageKey = `aghanyspot-challenge:${joinedPayload.challengeId}`;
+    try {
+      const storedRecord = window.localStorage.getItem(storageKey);
+      const storedPayload = storedRecord ? JSON.parse(storedRecord) : null;
+      if (storedPayload?.joined && storedPayload.joinedBy !== playerId) {
+        setChallengeRoomFull(true);
+        return;
+      }
+    } catch {
+      // Continue without room occupancy checks when storage is unavailable.
+    }
+
     const nextPayload = { ...challengeConfig, ...joinedPayload, joined: true, host: false };
+    nextPayload.joinedBy = playerId;
     setChallengeConfig(nextPayload);
     setChallengeStatus('waiting');
     setChallengeOpponentResults(buildOpponentResults(nextPayload.trackIds, nextPayload.rounds, nextPayload.seed || Date.now()));
@@ -840,14 +874,22 @@ export default function App() {
             {is1v1Mode && challengeStatus === 'waiting' && (
               <div className="challenge-waiting-bar">
                 <div className="challenge-waiting-bar__text">
-                  {isChallengeHost ? 'Waiting for opponent to join' : 'Challenge link received'}
+                  {isChallengeHost
+                    ? 'Waiting for opponent to join'
+                    : challengeRoomFull
+                      ? 'Room is full'
+                      : challengeConfig?.joined
+                        ? 'Joined, waiting for host'
+                        : 'Challenge link received'}
                 </div>
-                <button type="button" className="btn btn--ghost" onClick={() => {
-                  playUiClick();
-                  shareChallengeLink();
-                }}>
-                  Copy link
-                </button>
+                {isChallengeHost && (
+                  <button type="button" className="btn btn--ghost" onClick={() => {
+                    playUiClick();
+                    shareChallengeLink();
+                  }}>
+                    Copy link
+                  </button>
+                )}
                 {isChallengeHost ? (
                   <button
                     type="button"
@@ -863,7 +905,7 @@ export default function App() {
                   >
                     Start challenge
                   </button>
-                ) : (
+                ) : !challengeConfig?.joined && !challengeRoomFull ? (
                   <button
                     type="button"
                     className="btn btn--primary"
@@ -875,7 +917,7 @@ export default function App() {
                   >
                     Join challenge
                   </button>
-                )}
+                ) : null}
               </div>
             )}
 
