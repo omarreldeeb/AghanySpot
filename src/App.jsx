@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Moon, Sun, Users } from 'lucide-react';
+import { supabase } from './lib/supabase';
 import { EGYPTIAN_SONGS, CLIP_DURATIONS } from './data/songs';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
 import ClipProgress from './components/ClipProgress';
@@ -45,6 +46,27 @@ const decodeChallengePayload = (encoded) => {
     return null;
   }
 };
+
+const challengePayloadToRow = (payload, statusOverride = null) => ({
+  id: payload.challengeId,
+  rounds: payload.rounds,
+  track_ids: payload.trackIds,
+  host_id: payload.challengerId,
+  guest_id: payload.joinedBy || null,
+  status: statusOverride || payload.status || 'waiting',
+});
+
+const challengeRowToPayload = (row) => ({
+  rounds: row.rounds,
+  trackIds: row.track_ids,
+  challengeId: row.id,
+  challengerId: row.host_id,
+  seed: row.id,
+  host: false,
+  joined: Boolean(row.guest_id),
+  joinedBy: row.guest_id || null,
+  status: row.status,
+});
 
 const buildChallengeSequence = (rounds, seed = Date.now()) => {
   const songs = [...EGYPTIAN_SONGS];
@@ -312,6 +334,12 @@ export default function App() {
       // Ignore when localStorage is unavailable.
     }
 
+    if (supabase) {
+      supabase.from('challenge_rooms').upsert(challengePayloadToRow(nextValue)).then(({ error }) => {
+        if (error) console.warn('Challenge room sync unavailable:', error.message);
+      });
+    }
+
     return nextValue;
   }, []);
 
@@ -392,6 +420,56 @@ export default function App() {
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);
   }, [challengeConfig?.challengeId, challengeStatus]);
+
+  useEffect(() => {
+    if (!supabase || !challengeConfig?.challengeId) return undefined;
+
+    let channel;
+    const loadRoom = async () => {
+      const { data, error } = await supabase
+        .from('challenge_rooms')
+        .select('*')
+        .eq('id', challengeConfig.challengeId)
+        .maybeSingle();
+      if (!error && data) {
+        const nextPayload = challengeRowToPayload(data);
+        setChallengeConfig((current) => ({
+          ...current,
+          joined: nextPayload.joined,
+          joinedBy: nextPayload.joinedBy,
+          status: nextPayload.status,
+          host: current.host,
+        }));
+        setChallengeStatus(nextPayload.status || 'waiting');
+      }
+    };
+
+    loadRoom();
+    channel = supabase
+      .channel(`challenge-room-${challengeConfig.challengeId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'challenge_rooms',
+        filter: `id=eq.${challengeConfig.challengeId}`,
+      }, (event) => {
+        if (!event.new) return;
+        const nextPayload = challengeRowToPayload(event.new);
+        setChallengeConfig((current) => ({
+          ...current,
+          joined: nextPayload.joined,
+          joinedBy: nextPayload.joinedBy,
+          status: nextPayload.status,
+          host: current.host,
+        }));
+        setChallengeStatus(nextPayload.status || 'waiting');
+      })
+      .subscribe();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [challengeConfig?.challengeId]);
 
   const handlePlay = useCallback(() => {
     if (is1v1Mode && challengeStatus !== 'playing') return;
@@ -673,6 +751,29 @@ export default function App() {
     const playerId = window.sessionStorage.getItem('aghanyspot-player-id') || `player-${Math.random().toString(36).slice(2, 10)}`;
     window.sessionStorage.setItem('aghanyspot-player-id', playerId);
     const storageKey = `aghanyspot-challenge:${joinedPayload.challengeId}`;
+
+    if (supabase) {
+      supabase.rpc('join_challenge', {
+        room_id: joinedPayload.challengeId,
+        player_id: playerId,
+      }).then(({ data, error }) => {
+        if (error || !data) {
+          setChallengeRoomFull(true);
+          return;
+        }
+
+        const joinedRecord = Array.isArray(data) ? data[0] : data;
+        const nextPayload = { ...challengeConfig, ...joinedPayload, joined: true, host: false, joinedBy: joinedRecord.guest_id || playerId };
+        setChallengeConfig(nextPayload);
+        setChallengeStatus('waiting');
+        setChallengeOpponentResults(buildOpponentResults(nextPayload.trackIds, nextPayload.rounds, nextPayload.seed || Date.now()));
+        const url = new URL(window.location.href);
+        url.searchParams.set('challenge', encodeChallengePayload(nextPayload));
+        window.history.replaceState({}, '', url.toString());
+      });
+      return;
+    }
+
     try {
       const storedRecord = window.localStorage.getItem(storageKey);
       const storedPayload = storedRecord ? JSON.parse(storedRecord) : null;
