@@ -496,18 +496,19 @@ export default function App() {
         .maybeSingle();
       if (!error && data) {
         const nextPayload = challengeRowToPayload(data);
+        const shouldApplyRoomQueue = !challengeRematchRequested || ['playing', 'complete'].includes(nextPayload.status);
         setChallengeConfig((current) => ({
           ...current,
           joined: nextPayload.joined,
           joinedBy: nextPayload.joinedBy,
-          rounds: nextPayload.rounds,
-          trackIds: nextPayload.trackIds,
+          rounds: shouldApplyRoomQueue ? nextPayload.rounds : current.rounds,
+          trackIds: shouldApplyRoomQueue ? nextPayload.trackIds : current.trackIds,
           status: nextPayload.status,
           hostRematch: nextPayload.hostRematch,
           guestRematch: nextPayload.guestRematch,
           host: current.host,
         }));
-        setChallengeQueue(nextPayload.trackIds);
+        if (shouldApplyRoomQueue) setChallengeQueue(nextPayload.trackIds);
         setChallengeStatus((currentStatus) => {
           if (nextPayload.status === 'playing' && currentStatus === 'rematch_waiting') {
             setHasSubmittedChallengeResults(false);
@@ -544,18 +545,19 @@ export default function App() {
       }, (event) => {
         if (!event.new) return;
         const nextPayload = challengeRowToPayload(event.new);
+        const shouldApplyRoomQueue = !challengeRematchRequested || ['playing', 'complete'].includes(nextPayload.status);
         setChallengeConfig((current) => ({
           ...current,
           joined: nextPayload.joined,
           joinedBy: nextPayload.joinedBy,
-          rounds: nextPayload.rounds,
-          trackIds: nextPayload.trackIds,
+          rounds: shouldApplyRoomQueue ? nextPayload.rounds : current.rounds,
+          trackIds: shouldApplyRoomQueue ? nextPayload.trackIds : current.trackIds,
           status: nextPayload.status,
           hostRematch: nextPayload.hostRematch,
           guestRematch: nextPayload.guestRematch,
           host: current.host,
         }));
-        setChallengeQueue(nextPayload.trackIds);
+        if (shouldApplyRoomQueue) setChallengeQueue(nextPayload.trackIds);
         setChallengeStatus((currentStatus) => {
           if (nextPayload.status === 'playing' && currentStatus === 'rematch_waiting') {
             setHasSubmittedChallengeResults(false);
@@ -584,7 +586,7 @@ export default function App() {
       window.clearInterval(pollRoom);
       if (channel) supabase.removeChannel(channel);
     };
-  }, [challengeConfig?.challengeId, hasSubmittedChallengeResults]);
+  }, [challengeConfig?.challengeId, challengeRematchRequested, hasSubmittedChallengeResults]);
 
   useEffect(() => {
     if (!supabase || !is1v1Mode || !challengeConfig?.challengeId) return undefined;
