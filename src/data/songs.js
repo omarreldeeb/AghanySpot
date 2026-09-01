@@ -282,6 +282,18 @@ export const EGYPTIAN_SONGS = [
     cover: assetPath('Songs/Covers/We Ghalawatek - Amr Diab.jpg'),
     accent: '#f97316',
   },
+  {
+    id: 24,
+    title: 'Seneen',
+    artist: 'Tul8te',
+    arabicTitle: 'سنين',
+    arabicArtist: 'توليت',
+    era: '2020s',
+    difficulty: 'Easy',
+    src: songSrc('Seneen - Tul8te.mp3'),
+    cover: assetPath('Songs/Covers/Seneen - Tul8te.jpg'),
+    accent: '#ec4899',
+  },
 ];
 
 // Exact Songspot snippet durations (seconds)
