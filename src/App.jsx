@@ -510,7 +510,7 @@ export default function App() {
         }));
         if (shouldApplyRoomQueue) setChallengeQueue(nextPayload.trackIds);
         setChallengeStatus((currentStatus) => {
-          if (nextPayload.status === 'playing' && currentStatus === 'rematch_waiting') {
+          if (nextPayload.status === 'playing' && (currentStatus === 'rematch_waiting' || challengeRematchRequested)) {
             setChallengeRematchRequested(false);
             setHasSubmittedChallengeResults(false);
             setChallengeResults([]);
@@ -524,7 +524,7 @@ export default function App() {
           if (hasSubmittedChallengeResults) return currentStatus;
           return nextPayload.status === 'waiting_results' ? 'playing' : (nextPayload.status || 'waiting');
         });
-        if (nextPayload.status === 'complete' && hasSubmittedChallengeResults && challengeResults.length >= challengeConfig.rounds && nextPayload.hostResults && nextPayload.guestResults) {
+        if (nextPayload.status === 'complete' && !challengeRematchRequested && hasSubmittedChallengeResults && challengeResults.length >= challengeConfig.rounds && nextPayload.hostResults && nextPayload.guestResults) {
           setChallengeSummary(buildChallengeSummary(
             challengeConfig,
             isChallengeHost ? nextPayload.hostResults : nextPayload.guestResults,
@@ -560,7 +560,7 @@ export default function App() {
         }));
         if (shouldApplyRoomQueue) setChallengeQueue(nextPayload.trackIds);
         setChallengeStatus((currentStatus) => {
-          if (nextPayload.status === 'playing' && currentStatus === 'rematch_waiting') {
+          if (nextPayload.status === 'playing' && (currentStatus === 'rematch_waiting' || challengeRematchRequested)) {
             setChallengeRematchRequested(false);
             setHasSubmittedChallengeResults(false);
             setChallengeResults([]);
@@ -574,7 +574,7 @@ export default function App() {
           if (hasSubmittedChallengeResults) return currentStatus;
           return nextPayload.status === 'waiting_results' ? 'playing' : (nextPayload.status || 'waiting');
         });
-        if (nextPayload.status === 'complete' && hasSubmittedChallengeResults && challengeResults.length >= challengeConfig.rounds && nextPayload.hostResults && nextPayload.guestResults) {
+        if (nextPayload.status === 'complete' && !challengeRematchRequested && hasSubmittedChallengeResults && challengeResults.length >= challengeConfig.rounds && nextPayload.hostResults && nextPayload.guestResults) {
           setChallengeSummary(buildChallengeSummary(
             challengeConfig,
             isChallengeHost ? nextPayload.hostResults : nextPayload.guestResults,
@@ -1019,6 +1019,12 @@ export default function App() {
         if (data?.[0]?.status === 'playing') {
           setChallengeStatus('playing');
           setChallengeRematchRequested(false);
+          setChallengeConfig((current) => ({
+            ...current,
+            status: 'playing',
+            hostRematch: false,
+            guestRematch: false,
+          }));
           setHasSubmittedChallengeResults(false);
           setChallengeResults([]);
           setChallengeSummary(null);
