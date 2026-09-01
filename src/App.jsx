@@ -56,6 +56,8 @@ const challengePayloadToRow = (payload, statusOverride = null) => ({
   status: statusOverride || payload.status || 'waiting',
   host_results: payload.hostResults || null,
   guest_results: payload.guestResults || null,
+  host_rematch: Boolean(payload.hostRematch),
+  guest_rematch: Boolean(payload.guestRematch),
 });
 
 const challengeRowToPayload = (row) => ({
@@ -70,6 +72,8 @@ const challengeRowToPayload = (row) => ({
   status: row.status,
   hostResults: row.host_results || null,
   guestResults: row.guest_results || null,
+  hostRematch: Boolean(row.host_rematch),
+  guestRematch: Boolean(row.guest_rematch),
 });
 
 const buildChallengeSequence = (rounds, seed = Date.now()) => {
@@ -189,6 +193,7 @@ export default function App() {
   const [challengeOpponentResults, setChallengeOpponentResults] = useState([]);
   const [challengeRoomFull, setChallengeRoomFull] = useState(false);
   const [challengeDisconnectNotice, setChallengeDisconnectNotice] = useState('');
+  const [challengeRematchRequested, setChallengeRematchRequested] = useState(false);
   const [roundFeedback, setRoundFeedback] = useState('');
   const [copyToast, setCopyToast] = useState('');
   const challengeRoundStartedAt = useRef(Date.now());
@@ -646,7 +651,7 @@ export default function App() {
 
         window.setTimeout(() => {
           setRoundFeedback('');
-        }, 1200);
+        }, 3200);
 
         if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
           submitChallengeResults(nextResults);
@@ -660,7 +665,7 @@ export default function App() {
           setStep(0);
           setQuery('');
           setSuggestions([]);
-        }, 1200);
+        }, 3200);
         return;
       }
 
@@ -689,6 +694,7 @@ export default function App() {
     setChallengeStatus('idle');
     setChallengeRoomFull(false);
     setChallengeDisconnectNotice('');
+    setChallengeRematchRequested(false);
     setChallengeModalOpen(false);
     setGameStatus('PLAYING');
     setStep(0);
@@ -874,9 +880,39 @@ export default function App() {
     syncChallengeRecord(resultPayload, 'waiting_results');
   }, [challengeConfig, isChallengeHost, syncChallengeRecord]);
 
+  const requestChallengeRematch = useCallback(() => {
+    if (!challengeConfig || challengeRematchRequested) return;
+    setChallengeRematchRequested(true);
+    const nextPayload = {
+      ...challengeConfig,
+      status: 'rematch_waiting',
+      ...(isChallengeHost ? { hostRematch: true } : { guestRematch: true }),
+    };
+    setChallengeConfig(nextPayload);
+    setChallengeStatus('rematch_waiting');
+    if (supabase) {
+      supabase.rpc('request_challenge_rematch', {
+        room_id: challengeConfig.challengeId,
+        player_role: isChallengeHost ? 'host' : 'guest',
+      });
+    } else {
+      syncChallengeRecord(nextPayload, 'rematch_waiting');
+    }
+  }, [challengeConfig, challengeRematchRequested, isChallengeHost, syncChallengeRecord]);
+
   const summaryPlayer = challengeSummary?.player || { total: 0, roundTotal: 0, guessed: [], missed: [] };
   const summaryOpponent = challengeSummary?.opponent || { total: 0, roundTotal: 0, guessed: [], missed: [] };
   const isChallengeRoundsValid = Number.isInteger(challengeRoundsInput) && challengeRoundsInput >= 1 && challengeRoundsInput <= 25;
+
+  useEffect(() => {
+    if (challengeStatus !== 'playing' || !challengeSummary) return;
+    setChallengeSummary(null);
+    setChallengeResults([]);
+    setChallengeRoundIndex(0);
+    setStep(0);
+    setGameStatus('PLAYING');
+    setChallengeRematchRequested(false);
+  }, [challengeStatus, challengeSummary]);
 
   const challengeButtonLabel = is1v1Mode && challengeStatus === 'waiting' ? (isChallengeHost ? 'Challenge' : 'Waiting') : 'Challenge a Friend';
 
@@ -972,16 +1008,29 @@ export default function App() {
               </div>
             </div>
 
-            <button
-              type="button"
-              className="btn btn--primary challenge-return-btn"
-              onClick={() => {
-                playUiClick();
-                resetChallengeMode();
-              }}
-            >
-              Return to Home
-            </button>
+            <div className="challenge-summary-actions">
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={() => {
+                  playUiClick();
+                  requestChallengeRematch();
+                }}
+                disabled={challengeRematchRequested}
+              >
+                {challengeRematchRequested ? 'Waiting for opponent' : 'Play again'}
+              </button>
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => {
+                  playUiClick();
+                  resetChallengeMode();
+                }}
+              >
+                Return to Home
+              </button>
+            </div>
           </section>
         </main>
       ) : (
@@ -1077,7 +1126,7 @@ export default function App() {
               <p className="header__subtitle">{is1v1Mode ? `1v1 Round ${challengeRoundIndex + 1}/${challengeConfig?.rounds || 1}` : 'Guess the Song'}</p>
             </header>
 
-            {is1v1Mode && challengeStatus === 'waiting' && (
+            {is1v1Mode && ['waiting', 'waiting_results'].includes(challengeStatus) && (
               <div className="challenge-waiting-bar">
                 <div className="challenge-waiting-bar__text">
                     {challengeStatus === 'waiting_results'
