@@ -503,6 +503,16 @@ export default function App() {
           host: current.host,
         }));
         setChallengeStatus((currentStatus) => {
+          if (nextPayload.status === 'playing' && currentStatus === 'rematch_waiting') {
+            setHasSubmittedChallengeResults(false);
+            setChallengeResults([]);
+            setChallengeSummary(null);
+            setChallengeRoundIndex(0);
+            setStep(0);
+            setGameStatus('PLAYING');
+            challengeRoundLocked.current = false;
+            return 'playing';
+          }
           if (hasSubmittedChallengeResults) return currentStatus;
           return nextPayload.status === 'waiting_results' ? 'playing' : (nextPayload.status || 'waiting');
         });
@@ -538,6 +548,16 @@ export default function App() {
           host: current.host,
         }));
         setChallengeStatus((currentStatus) => {
+          if (nextPayload.status === 'playing' && currentStatus === 'rematch_waiting') {
+            setHasSubmittedChallengeResults(false);
+            setChallengeResults([]);
+            setChallengeSummary(null);
+            setChallengeRoundIndex(0);
+            setStep(0);
+            setGameStatus('PLAYING');
+            challengeRoundLocked.current = false;
+            return 'playing';
+          }
           if (hasSubmittedChallengeResults) return currentStatus;
           return nextPayload.status === 'waiting_results' ? 'playing' : (nextPayload.status || 'waiting');
         });
@@ -965,6 +985,18 @@ export default function App() {
       supabase.rpc('request_challenge_rematch', {
         room_id: challengeConfig.challengeId,
         player_role: isChallengeHost ? 'host' : 'guest',
+      }).then(({ data, error }) => {
+        if (error) console.warn('Challenge rematch sync unavailable:', error.message);
+        if (data?.[0]?.status === 'playing') {
+          setChallengeStatus('playing');
+          setHasSubmittedChallengeResults(false);
+          setChallengeResults([]);
+          setChallengeSummary(null);
+          setChallengeRoundIndex(0);
+          setStep(0);
+          setGameStatus('PLAYING');
+          challengeRoundLocked.current = false;
+        }
       });
     } else {
       syncChallengeRecord(nextPayload, 'rematch_waiting');
