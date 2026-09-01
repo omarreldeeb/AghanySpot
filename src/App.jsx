@@ -76,6 +76,20 @@ const challengeRowToPayload = (row) => ({
   guestRematch: Boolean(row.guest_rematch),
 });
 
+const readChallengeProgress = (payload) => {
+  const playerId = payload.host
+    ? payload.challengerId
+    : window.sessionStorage.getItem('aghanyspot-player-id');
+  if (!playerId) return null;
+
+  try {
+    const saved = window.localStorage.getItem(`aghanyspot-progress:${payload.challengeId}:${playerId}`);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+};
+
 const buildChallengeSequence = (rounds, seed = Date.now()) => {
   const songs = [...EGYPTIAN_SONGS];
   let value = Number(seed) >>> 0;
@@ -364,21 +378,52 @@ export default function App() {
       joined: Boolean(payload.joined),
       host: Boolean(payload.host),
     };
+    const savedProgress = readChallengeProgress(normalizedPayload);
+    const progressIsValid = savedProgress
+      && Number.isInteger(savedProgress.roundIndex)
+      && Array.isArray(savedProgress.results)
+      && savedProgress.roundIndex >= 0
+      && savedProgress.roundIndex < normalizedPayload.rounds;
 
     setIs1v1Mode(true);
     setChallengeConfig(normalizedPayload);
     setChallengeQueue(normalizedPayload.trackIds);
-    setChallengeRoundIndex(0);
-    setChallengeResults([]);
+    setChallengeRoundIndex(progressIsValid ? savedProgress.roundIndex : 0);
+    setChallengeResults(progressIsValid ? savedProgress.results : []);
     setChallengeSummary(null);
-    setChallengeStatus(normalizedPayload.status || 'waiting');
-    setHasSubmittedChallengeResults(false);
+    setChallengeStatus(progressIsValid && savedProgress.submitted
+      ? 'waiting_results'
+      : normalizedPayload.status || 'waiting');
+    setHasSubmittedChallengeResults(Boolean(progressIsValid && savedProgress.submitted));
     setChallengeOpponentResults(buildOpponentResults(normalizedPayload.trackIds, normalizedPayload.rounds, normalizedPayload.seed || Date.now()));
+    challengeRoundLocked.current = false;
     setGameStatus('PLAYING');
-    setStep(0);
+    setStep(progressIsValid ? savedProgress.step || 0 : 0);
     setQuery('');
     setSuggestions([]);
   }, []);
+
+  useEffect(() => {
+    if (!is1v1Mode || !challengeConfig?.challengeId) return;
+    const playerId = challengeConfig.host
+      ? challengeConfig.challengerId
+      : window.sessionStorage.getItem('aghanyspot-player-id');
+    if (!playerId) return;
+
+    try {
+      window.localStorage.setItem(
+        `aghanyspot-progress:${challengeConfig.challengeId}:${playerId}`,
+        JSON.stringify({
+          roundIndex: challengeRoundIndex,
+          step,
+          results: challengeResults,
+          submitted: hasSubmittedChallengeResults,
+        }),
+      );
+    } catch {
+      // Continue without local progress persistence when storage is unavailable.
+    }
+  }, [challengeConfig?.challengerId, challengeConfig?.challengeId, challengeConfig?.host, challengeResults, hasSubmittedChallengeResults, is1v1Mode, challengeRoundIndex, step]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
