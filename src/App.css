@@ -262,6 +262,34 @@
   display: none;
 }
 
+.challenge-exit-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 12px;
+  background: rgba(127, 29, 29, 0.78);
+  color: #fee2e2;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenge-exit-btn:hover {
+  background: #dc2626;
+}
+
+.challenge-rematch-error {
+  flex: 1 1 100%;
+  margin: 0;
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+}
+
 .round-feedback {
   text-align: center;
   font-weight: 700;
@@ -452,6 +480,11 @@
     height: 38px;
     padding: 8px;
     font-size: 12px;
+  }
+
+  .challenge-exit-btn {
+    width: 38px;
+    height: 38px;
   }
 
   .theme-toggle {

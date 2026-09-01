@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Home, Moon, Sun, Users } from 'lucide-react';
+import { Home, LogOut, Moon, Sun, Users } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { EGYPTIAN_SONGS, CLIP_DURATIONS } from './data/songs';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
@@ -210,6 +210,7 @@ export default function App() {
   const [challengeRematchRequested, setChallengeRematchRequested] = useState(false);
   const [rematchModalOpen, setRematchModalOpen] = useState(false);
   const [rematchRoundsInput, setRematchRoundsInput] = useState(5);
+  const [rematchError, setRematchError] = useState('');
   const [hasSubmittedChallengeResults, setHasSubmittedChallengeResults] = useState(false);
   const [roundFeedback, setRoundFeedback] = useState('');
   const [copyToast, setCopyToast] = useState('');
@@ -976,6 +977,7 @@ export default function App() {
   const requestChallengeRematch = useCallback((rematchConfig = challengeConfig) => {
     if (!rematchConfig || challengeRematchRequested) return;
     setChallengeRematchRequested(true);
+    setRematchError('');
     const nextPayload = {
       ...rematchConfig,
       status: 'rematch_waiting',
@@ -990,7 +992,19 @@ export default function App() {
         rematch_rounds: rematchConfig.rounds,
         rematch_track_ids: rematchConfig.trackIds,
       }).then(({ data, error }) => {
-        if (error) console.warn('Challenge rematch sync unavailable:', error.message);
+        if (error) {
+          console.warn('Challenge rematch sync unavailable:', error.message);
+          setChallengeRematchRequested(false);
+          setChallengeStatus('complete');
+          setRematchError('Rematch could not start. Run the latest Supabase SQL setup.');
+          return;
+        }
+        if (!data?.length) {
+          setChallengeRematchRequested(false);
+          setChallengeStatus('complete');
+          setRematchError('Waiting for the host to choose the rematch rounds.');
+          return;
+        }
         if (data?.[0]?.status === 'playing') {
           setChallengeStatus('playing');
           setHasSubmittedChallengeResults(false);
@@ -1065,6 +1079,18 @@ export default function App() {
                 >
                   <Home size={18} aria-hidden="true" />
                 </button>
+                <button
+                  type="button"
+                  className="challenge-exit-btn"
+                  aria-label="Exit challenge"
+                  title="Exit challenge"
+                  onClick={() => {
+                    playUiClick();
+                    resetChallengeMode();
+                  }}
+                >
+                  <LogOut size={18} aria-hidden="true" />
+                </button>
               </div>
               <div className="header__badge">1V1 Results</div>
               <h1 className="header__title">Challenge Complete</h1>
@@ -1135,6 +1161,7 @@ export default function App() {
             </div>
 
             <div className="challenge-summary-actions">
+              {rematchError && <p className="challenge-rematch-error" role="alert">{rematchError}</p>}
               <button
                 type="button"
                 className="btn btn--primary"
@@ -1206,6 +1233,20 @@ export default function App() {
           <section className="stage">
             <header className="header">
               <div className="header__actions">
+                {is1v1Mode && (
+                  <button
+                    type="button"
+                    className="challenge-exit-btn"
+                    aria-label="Exit challenge"
+                    title="Exit challenge"
+                    onClick={() => {
+                      playUiClick();
+                      resetChallengeMode();
+                    }}
+                  >
+                    <LogOut size={18} aria-hidden="true" />
+                  </button>
+                )}
                 {is1v1Mode && (
                   <button
                     type="button"
