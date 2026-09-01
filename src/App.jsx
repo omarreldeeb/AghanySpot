@@ -498,6 +498,8 @@ export default function App() {
           joined: nextPayload.joined,
           joinedBy: nextPayload.joinedBy,
           status: nextPayload.status,
+          hostRematch: nextPayload.hostRematch,
+          guestRematch: nextPayload.guestRematch,
           host: current.host,
         }));
         setChallengeStatus((currentStatus) => {
@@ -531,6 +533,8 @@ export default function App() {
           joined: nextPayload.joined,
           joinedBy: nextPayload.joinedBy,
           status: nextPayload.status,
+          hostRematch: nextPayload.hostRematch,
+          guestRematch: nextPayload.guestRematch,
           host: current.host,
         }));
         setChallengeStatus((currentStatus) => {
@@ -617,7 +621,7 @@ export default function App() {
   }, [volume]);
 
   const handleLoopToggle = () => {
-    if (is1v1Mode && (challengeStatus !== 'playing' || hasSubmittedChallengeResults)) return;
+    if (is1v1Mode && (challengeStatus !== 'playing' || hasSubmittedChallengeResults || roundFeedback)) return;
     setLoopEnabled((enabled) => {
       const nextEnabled = !enabled;
       setLooping(nextEnabled);
@@ -628,7 +632,7 @@ export default function App() {
 
   const submitGuess = (selectedSong) => {
     if (gameStatus !== 'PLAYING') return;
-    if (is1v1Mode && (challengeStatus !== 'playing' || hasSubmittedChallengeResults || challengeRoundLocked.current)) return;
+    if (is1v1Mode && (challengeStatus !== 'playing' || hasSubmittedChallengeResults || challengeRoundLocked.current || roundFeedback)) return;
 
     const currentChallengeSong = is1v1Mode ? challengeCurrentSong : currentSong;
     const isCorrect = selectedSong.id === currentChallengeSong.id;
@@ -694,11 +698,11 @@ export default function App() {
   };
 
   const handleSkip = () => {
-    if (gameStatus !== 'PLAYING') return;
+    if (gameStatus !== 'PLAYING' || roundFeedback) return;
 
     const currentChallengeSong = is1v1Mode ? challengeCurrentSong : currentSong;
 
-    if (is1v1Mode && challengeConfig && challengeStatus === 'playing' && !hasSubmittedChallengeResults && !challengeRoundLocked.current) {
+    if (is1v1Mode && challengeConfig && challengeStatus === 'playing' && !hasSubmittedChallengeResults && !challengeRoundLocked.current && !roundFeedback) {
       challengeRoundLocked.current = true;
       if (step + 1 >= CLIP_DURATIONS.length) {
         const roundDuration = Number(((Date.now() - challengeRoundStartedAt.current) / 1000).toFixed(1));
@@ -992,7 +996,7 @@ export default function App() {
       <div className="app__glow app__glow--right" aria-hidden="true" />
 
       {challengeSummary && is1v1Mode ? (
-        <main className="shell">
+        <main className="shell shell--results">
           <section className="stage challenge-summary-panel">
             <header className="header challenge-summary-header">
               <div className="header__actions">
@@ -1347,7 +1351,7 @@ export default function App() {
                   query={query}
                   suggestions={suggestions}
                   step={step}
-                  disabled={is1v1Mode && (challengeStatus !== 'playing' || hasSubmittedChallengeResults)}
+                  disabled={is1v1Mode && (challengeStatus !== 'playing' || hasSubmittedChallengeResults || roundFeedback)}
                   onQueryChange={setQuery}
                   onSelect={submitGuess}
                   onSkip={handleSkip}

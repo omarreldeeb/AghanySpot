@@ -311,6 +311,11 @@
   margin: 0 auto;
 }
 
+.shell--results {
+  grid-template-columns: minmax(0, 820px);
+  justify-content: center;
+}
+
 .mobile-menu-toggle {
   position: absolute;
   top: 0;
