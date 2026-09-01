@@ -272,6 +272,19 @@
   padding: 10px 12px;
 }
 
+.challenge-disconnect-notice {
+  width: min(820px, 100%);
+  margin: 0 auto;
+  padding: 12px 14px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 14px;
+  background: rgba(127, 29, 29, 0.2);
+  color: #fecaca;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+
 .challenge-waiting-bar {
   width: min(820px, 100%);
   margin: 0 auto;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Moon, Sun, Users } from 'lucide-react';
+import { Home, Moon, Sun, Users } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { EGYPTIAN_SONGS, CLIP_DURATIONS } from './data/songs';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
@@ -54,6 +54,8 @@ const challengePayloadToRow = (payload, statusOverride = null) => ({
   host_id: payload.challengerId,
   guest_id: payload.joinedBy || null,
   status: statusOverride || payload.status || 'waiting',
+  host_results: payload.hostResults || null,
+  guest_results: payload.guestResults || null,
 });
 
 const challengeRowToPayload = (row) => ({
@@ -66,6 +68,8 @@ const challengeRowToPayload = (row) => ({
   joined: Boolean(row.guest_id),
   joinedBy: row.guest_id || null,
   status: row.status,
+  hostResults: row.host_results || null,
+  guestResults: row.guest_results || null,
 });
 
 const buildChallengeSequence = (rounds, seed = Date.now()) => {
@@ -184,6 +188,7 @@ export default function App() {
   const [challengeStatus, setChallengeStatus] = useState('idle');
   const [challengeOpponentResults, setChallengeOpponentResults] = useState([]);
   const [challengeRoomFull, setChallengeRoomFull] = useState(false);
+  const [challengeDisconnectNotice, setChallengeDisconnectNotice] = useState('');
   const [roundFeedback, setRoundFeedback] = useState('');
   const [copyToast, setCopyToast] = useState('');
   const challengeRoundStartedAt = useRef(Date.now());
@@ -441,6 +446,13 @@ export default function App() {
           host: current.host,
         }));
         setChallengeStatus(nextPayload.status || 'waiting');
+        if (nextPayload.status === 'complete' && nextPayload.hostResults && nextPayload.guestResults) {
+          setChallengeSummary(buildChallengeSummary(
+            challengeConfig,
+            isChallengeHost ? nextPayload.hostResults : nextPayload.guestResults,
+            isChallengeHost ? nextPayload.guestResults : nextPayload.hostResults,
+          ));
+        }
       }
     };
 
@@ -464,6 +476,13 @@ export default function App() {
           host: current.host,
         }));
         setChallengeStatus(nextPayload.status || 'waiting');
+        if (nextPayload.status === 'complete' && nextPayload.hostResults && nextPayload.guestResults) {
+          setChallengeSummary(buildChallengeSummary(
+            challengeConfig,
+            isChallengeHost ? nextPayload.hostResults : nextPayload.guestResults,
+            isChallengeHost ? nextPayload.guestResults : nextPayload.hostResults,
+          ));
+        }
       })
       .subscribe();
 
@@ -472,6 +491,37 @@ export default function App() {
       if (channel) supabase.removeChannel(channel);
     };
   }, [challengeConfig?.challengeId]);
+
+  useEffect(() => {
+    if (!supabase || !is1v1Mode || !challengeConfig?.challengeId) return undefined;
+
+    const playerId = challengeConfig.host
+      ? challengeConfig.challengerId
+      : window.sessionStorage.getItem('aghanyspot-player-id');
+    if (!playerId) return undefined;
+
+    let opponentWasPresent = false;
+    const presenceChannel = supabase.channel(`challenge-presence-${challengeConfig.challengeId}`, {
+      config: { presence: { key: playerId } },
+    });
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const players = Object.values(presenceChannel.presenceState()).flat();
+        if (players.length >= 2) opponentWasPresent = true;
+        if (opponentWasPresent && players.length < 2) {
+          setChallengeDisconnectNotice('Your opponent disconnected.');
+        }
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({ role: challengeConfig.host ? 'host' : 'guest' });
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(presenceChannel);
+    };
+  }, [challengeConfig?.challengeId, challengeConfig?.host, challengeConfig?.challengerId, is1v1Mode]);
 
   const handlePlay = useCallback(() => {
     if (is1v1Mode && challengeStatus !== 'playing') return;
@@ -538,8 +588,7 @@ export default function App() {
       }, 1200);
 
       if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
-        const finalSummary = buildChallengeSummary(challengeConfig, nextResults, challengeOpponentResults);
-        setChallengeSummary(finalSummary);
+        submitChallengeResults(nextResults);
         setGameStatus('PLAYING');
         setQuery('');
         setSuggestions([]);
@@ -600,8 +649,7 @@ export default function App() {
         }, 1200);
 
         if (challengeRoundIndex + 1 >= challengeConfig.rounds) {
-          const finalSummary = buildChallengeSummary(challengeConfig, nextResults, challengeOpponentResults);
-          setChallengeSummary(finalSummary);
+          submitChallengeResults(nextResults);
           setQuery('');
           setSuggestions([]);
           return;
@@ -640,6 +688,7 @@ export default function App() {
     setChallengeSummary(null);
     setChallengeStatus('idle');
     setChallengeRoomFull(false);
+    setChallengeDisconnectNotice('');
     setChallengeModalOpen(false);
     setGameStatus('PLAYING');
     setStep(0);
@@ -798,10 +847,36 @@ export default function App() {
     window.history.replaceState({}, '', url.toString());
   }, [challengeConfig, syncChallengeRecord]);
 
+  const isChallengeHost = Boolean(challengeConfig?.host);
+
+  const submitChallengeResults = useCallback((results) => {
+    const resultPayload = { ...challengeConfig, status: 'waiting_results' };
+    if (isChallengeHost) resultPayload.hostResults = results;
+    else resultPayload.guestResults = results;
+    setChallengeStatus('waiting_results');
+    setChallengeConfig(resultPayload);
+
+    if (supabase) {
+      supabase.rpc('submit_challenge_results', {
+        room_id: resultPayload.challengeId,
+        player_role: isChallengeHost ? 'host' : 'guest',
+        player_results: results,
+      }).then(({ data, error }) => {
+        if (error) console.warn('Challenge results sync unavailable:', error.message);
+        if (data?.[0]?.status === 'complete') {
+          const row = data[0];
+          setChallengeSummary(buildChallengeSummary(resultPayload, row.host_results || [], row.guest_results || []));
+        }
+      });
+      return;
+    }
+
+    syncChallengeRecord(resultPayload, 'waiting_results');
+  }, [challengeConfig, isChallengeHost, syncChallengeRecord]);
+
   const summaryPlayer = challengeSummary?.player || { total: 0, roundTotal: 0, guessed: [], missed: [] };
   const summaryOpponent = challengeSummary?.opponent || { total: 0, roundTotal: 0, guessed: [], missed: [] };
   const isChallengeRoundsValid = Number.isInteger(challengeRoundsInput) && challengeRoundsInput >= 1 && challengeRoundsInput <= 25;
-  const isChallengeHost = Boolean(challengeConfig?.host);
 
   const challengeButtonLabel = is1v1Mode && challengeStatus === 'waiting' ? (isChallengeHost ? 'Challenge' : 'Waiting') : 'Challenge a Friend';
 
@@ -815,6 +890,20 @@ export default function App() {
         <main className="shell">
           <section className="stage challenge-summary-panel">
             <header className="header challenge-summary-header">
+              <div className="header__actions">
+                <button
+                  type="button"
+                  className="challenge-header-btn challenge-home-btn"
+                  aria-label="Return to home"
+                  title="Return to home"
+                  onClick={() => {
+                    playUiClick();
+                    resetChallengeMode();
+                  }}
+                >
+                  <Home size={18} aria-hidden="true" />
+                </button>
+              </div>
               <div className="header__badge">1V1 Results</div>
               <h1 className="header__title">Challenge Complete</h1>
             </header>
@@ -941,6 +1030,20 @@ export default function App() {
           <section className="stage">
             <header className="header">
               <div className="header__actions">
+                {is1v1Mode && (
+                  <button
+                    type="button"
+                    className="challenge-header-btn challenge-home-btn"
+                    aria-label="Return to home"
+                    title="Return to home"
+                    onClick={() => {
+                      playUiClick();
+                      resetChallengeMode();
+                    }}
+                  >
+                    <Home size={18} aria-hidden="true" />
+                  </button>
+                )}
                 <button
                   type="button"
                   className="challenge-header-btn"
@@ -977,15 +1080,17 @@ export default function App() {
             {is1v1Mode && challengeStatus === 'waiting' && (
               <div className="challenge-waiting-bar">
                 <div className="challenge-waiting-bar__text">
-                  {isChallengeHost
-                    ? 'Waiting for opponent to join'
-                    : challengeRoomFull
-                      ? 'Room is full'
-                      : challengeConfig?.joined
-                        ? 'Joined, waiting for host'
-                        : 'Challenge link received'}
+                    {challengeStatus === 'waiting_results'
+                      ? 'Waiting for opponent to finish'
+                      : isChallengeHost
+                        ? 'Waiting for opponent to join'
+                        : challengeRoomFull
+                          ? 'Room is full'
+                          : challengeConfig?.joined
+                            ? 'Joined, waiting for host'
+                            : 'Challenge link received'}
                 </div>
-                {isChallengeHost && (
+                  {challengeStatus === 'waiting' && isChallengeHost && (
                   <button type="button" className="btn btn--ghost" onClick={() => {
                     playUiClick();
                     shareChallengeLink();
@@ -993,7 +1098,7 @@ export default function App() {
                     Copy link
                   </button>
                 )}
-                {isChallengeHost ? (
+                {challengeStatus === 'waiting' && isChallengeHost ? (
                   <button
                     type="button"
                     className="btn btn--primary"
@@ -1001,15 +1106,26 @@ export default function App() {
                     onClick={() => {
                       playUiClick();
                       if (challengeConfig?.joined) {
-                        setChallengeStatus('playing');
-                        setChallengeConfig((current) => ({ ...current, status: 'playing' }));
-                        syncChallengeRecord({ ...challengeConfig, status: 'playing' }, 'playing');
+                        if (supabase) {
+                          supabase.rpc('start_challenge', {
+                            room_id: challengeConfig.challengeId,
+                            host_id_value: challengeConfig.challengerId,
+                          }).then(({ data, error }) => {
+                            if (error || !data?.length) return;
+                            setChallengeStatus('playing');
+                            setChallengeConfig((current) => ({ ...current, status: 'playing' }));
+                          });
+                        } else {
+                          setChallengeStatus('playing');
+                          setChallengeConfig((current) => ({ ...current, status: 'playing' }));
+                          syncChallengeRecord({ ...challengeConfig, status: 'playing' }, 'playing');
+                        }
                       }
                     }}
                   >
                     Start challenge
                   </button>
-                ) : !challengeConfig?.joined && !challengeRoomFull ? (
+                ) : challengeStatus === 'waiting' && !challengeConfig?.joined && !challengeRoomFull ? (
                   <button
                     type="button"
                     className="btn btn--primary"
@@ -1028,6 +1144,12 @@ export default function App() {
             {roundFeedback && (
               <div className="round-feedback" role="status" aria-live="polite">
                 {roundFeedback}
+              </div>
+            )}
+
+            {challengeDisconnectNotice && (
+              <div className="challenge-disconnect-notice" role="alert">
+                {challengeDisconnectNotice}
               </div>
             )}
 
