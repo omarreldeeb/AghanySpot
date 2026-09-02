@@ -5,6 +5,120 @@ const assetPath = (path) =>
   `${import.meta.env.BASE_URL}${path.split('/').map(encodeURIComponent).join('/')}`;
 const songSrc = (filename) => assetPath(`Songs/${filename}`);
 
+const LEGACY_COVER_FILES = {
+  ' ركبت الخصومه Hamo el morshedy.mp3': ' ركبت الخصومه.webp',
+  '02.Tamally_Maak.mp3': 'Tamaly maak.jpeg',
+  '3 DAQAT.mp3': '3 DAQAT.jpeg',
+  'Adrenalin hamaki.mp3': 'Adrenalina.jpeg',
+  'Ahwak - Abdel Halim Hafez.mp3': 'Ahwak - Abdel Halim Hafez.jpeg',
+  'Ana La Habibi - Fairuz.mp3': 'Ana La Habibi - Fairuz.jpg',
+  'Ashan Habeeby - Tul8te.mp3': 'Ashan Habeeby - Tul8te.jpg',
+  'Balini - Ziad Zaza.mp3': 'Balini - Ziad Zaza.jpg',
+  'CLICK.mp3': ' ركبت الخصومه.webp',
+  'Control Marawan Pablo.mp3': 'Control Marawan Pablo.jpg',
+  'Dary Ya Alby - Hamza Namira.mp3': 'Dary Ya Alby - Hamza Namira.jpg',
+  'Do You Love Me Senorita - Saint Levant ft. Fares Sokar.mp3': 'Do You Love Me Senorita - Saint Levant ft. Fares Sokar.jpg',
+  'EL BAKHT.mp3': 'EL BAKHT.jpeg',
+  'Ein sehreya.mp3': 'Ein sehreya.png',
+  'El Hob Eibna - Ramy Sabry.mp3': 'El Hob Eibna - Ramy Sabry.png',
+  'El Wa2t El Daye3 Legecy.mp3': 'El Wa2t El Daye3.jpeg',
+  'El Wa3d - Wegz.mp3': 'El Wa3d - Wegz.jpg',
+  'El neyya Legecy.mp3': 'El neyya.jpeg',
+  'Enta 3omri.mp3': 'Enta umri.jpeg',
+  'Gait Ala Bali - Amer Mounib.mp3': 'Gait Ala Bali - Amer Mounib.jpg',
+  'Ghebet El Habayeb - Tamer Ashour.mp3': 'Ghebet El Habayeb - Tamer Ashour.jpg',
+  'Hadota Almany Marawan Mousa.mp3': 'Hadota Almany.png',
+  'Hena Masr Hafdal Kol Mara Ageelak - Bahaa Sultan & Mahmoud El Esseily.mp3': 'Hena Masr Hafdal Kol Mara Ageelak - Bahaa Sultan & Mahmoud El Esseily.jpg',
+  'Kadaba - Karim Osama.mp3': 'Kadaba - Karim Osama.jpg',
+  'Kalemeny Belel - Marwan Moussa.mp3': 'Kalemeny Belel - Marwan Moussa.jpg',
+  'Kebda - Afroto.mp3': 'Kebda - Afroto.jpeg',
+  'Kifak Inta - Fairuz.mp3': 'Kifak Inta - Fairuz.jpg',
+  'Layalina - Tul8te.mp3': 'Layalina - Tul8te.jpeg',
+  'Leh Ben5aby W Mesh Benol - Tul8te.mp3': 'Leh Ben5aby W Mesh Benol - Tul8te.jpg',
+  'Ma3aya - Bahaa Sultan.mp3': 'Ma3aya - Bahaa Sultan.jpg',
+  'Men Gheir Kalam - Tul8te.mp3': 'Men Gheir Kalam - Tul8te.jpg',
+  'Merayt El Hob - Tamer Ashour.mp3': 'Merayt El Hob - Tamer Ashour.jpeg',
+  'Nano - Tul8te.mp3': 'Nano - Tul8te.jpeg',
+  'SWISSRA - Lege-Cy.mp3': 'SWISSRA - Lege-Cy.jpg',
+  'Saalouni El Nass - Fairuz.mp3': 'Saalouni El Nass - Fairuz.jpg',
+  'Sahby Ya Sahby - Bahaa Sultan.mp3': 'Sahby Ya Sahby - Bahaa Sultan.jpg',
+  'Seneen - Tul8te.mp3': 'Seneen - Tul8te.jpg',
+  'Shayef El Bahr Shou Kbir - Fairuz.mp3': 'Shayef El Bahr Shou Kbir - Fairuz.jpg',
+  'Sunnet El Hayah - Hussain Al Jassmi.mp3': 'Sunnet El Hayah - Hussain Al Jassmi.jpg',
+  'Tany - Lege-Cy.mp3': 'Tany - Lege-Cy.jpg',
+  'Tegy Ntrahen - Tamer Ashour.mp3': 'Tegy Ntrahen - Tamer Ashour.jpg',
+  'Wahdy - Cairokee.mp3': 'Wahdy - Cairokee.jpg',
+  'Wahed Tany - Husayn.mp3': 'Wahed Tany - Husayn.png',
+  'Wala Ash Wala Kan - Tul8te.mp3': 'Wala Ash Wala Kan - Tul8te.jpg',
+  'We Ghalawatek - Amr Diab.mp3': 'We Ghalawatek - Amr Diab.jpg',
+  'Yalmidan.mp3': 'Yalmidan.jpeg',
+  'Zay El Hawa - Abdel Halim Hafez.mp3': 'Zay El Hawa - Abdel Halim Hafez.jpg',
+};
+
+const coverForSource = (source) => {
+  const filename = decodeURIComponent(source.split('/').pop() || '');
+  const coverFilename = LEGACY_COVER_FILES[filename] || filename.replace(/\.mp3$/i, '.webp');
+  return assetPath(`Songs/Covers/${coverFilename}`);
+};
+
+const ARABIC_METADATA = {
+  56: ['ألف ليلة وليلة', 'أم كلثوم'],
+  57: ['ألف مرة', 'أحمد سعد'],
+  58: ['قمر', 'موند'],
+  59: ['أنساكي', 'تومي جن'],
+  60: ['أيام وخلاص', 'موند'],
+  61: ['أيام وليالي', 'تومي جن'],
+  62: ['باقيين غراب', 'توليت'],
+  63: ['بقيت واحد', 'توليت'],
+  64: ['بتونس بيك', 'وردة'],
+  65: ['بتديني', 'ليجي سي'],
+  66: ['الأيام', 'ويجز'],
+  67: ['الحب جاني', 'توليت'],
+  68: ['امشي', 'تومي جن'],
+  69: ['اتغيرت', 'تومي'],
+  70: ['اتكلم كل يوم يومين', 'حسين الجسمي'],
+  71: ['في الجليد', 'ليجي سي'],
+  72: ['جريئة أوي', 'توليت'],
+  73: ['غلطان', 'تومي جن'],
+  74: ['غريب حالي', 'توليت'],
+  75: ['جيرلفرند', 'تاي سي و ويجز'],
+  76: ['حلف القمر', 'جورج وسوف'],
+  77: ['كلام بنقوله', 'ناصر'],
+  78: ['كان على عيني', 'ليجي سي وحميد الشاعري'],
+  79: ['لو نسّياني', 'ليجي سي'],
+  80: ['ليه', 'ناصر'],
+  81: ['لما تغيبي', 'ليجي سي'],
+  82: ['مفهوم', 'ليجي سي وعمر كيف'],
+  83: ['ما تيجي أعدي عليكِ', 'توليت'],
+  84: ['من الأول', 'عسقلاني'],
+  85: ['مرازمن', 'شهاب'],
+  86: ['مسافر', 'أبو وأحمد عدوية'],
+  87: ['مثقف سايح', 'حسين'],
+  88: ['مش أول مرة', 'ليجي سي'],
+  89: ['نارين بي توليت', 'توليت'],
+  90: ['ناسي', 'تومي جن'],
+  91: ['نسهر في الزمان', 'حميد الشاعري'],
+  92: ['بلاسيبو', 'ليجي سي'],
+  93: ['رحلة', 'موند'],
+  94: ['سألتك حبيبي', 'فيروز'],
+  95: ['سهران بليل', 'ليجي سي وأحمد بهاء'],
+  96: ['سيبي نفسك خالص', 'ليجي سي'],
+  97: ['شديني', 'توليت'],
+  98: ['شوفت كلام', 'ليجي سي'],
+  99: ['سور الصين', 'ليجي سي'],
+  100: ['طريق إجباري', 'تومي جن'],
+  101: ['تروح لمين', 'ليجي سي'],
+  102: ['ثرثرة', 'ليجي سي'],
+  103: ['ولا مين', 'ليجي سي وزياد ظاظا'],
+};
+
+const DISPLAY_METADATA = {
+  1: ['Rakabt El Khosoma', 'Hamo El Morshedy'],
+  2: ['Tamaly Maak', 'Amr Diab'],
+  4: ['3 Daqat', 'Abu'],
+  84: ['Mel Awal by 3askalany', '3askalany'],
+};
+
 const formatDisplayText = (value) => {
   if (typeof value !== 'string') return value;
 
@@ -25,10 +139,6 @@ const formatDisplayText = (value) => {
           if (!part || part === '-') return part;
           const hasLetters = /[A-Za-z]/.test(part);
           if (!hasLetters) return part;
-
-          if (part === part.toUpperCase() && part !== part.toLowerCase()) {
-            return part;
-          }
 
           return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
         })
@@ -1278,8 +1388,11 @@ const RAW_SONGS = [
 
 export const EGYPTIAN_SONGS = RAW_SONGS.map((song) => ({
   ...song,
-  title: formatDisplayText(song.title),
-  artist: formatDisplayText(song.artist),
+  title: DISPLAY_METADATA[song.id]?.[0] || formatDisplayText(song.title),
+  artist: DISPLAY_METADATA[song.id]?.[1] || formatDisplayText(song.artist),
+  arabicTitle: ARABIC_METADATA[song.id]?.[0] || formatDisplayText(song.arabicTitle),
+  arabicArtist: ARABIC_METADATA[song.id]?.[1] || formatDisplayText(song.arabicArtist),
+  cover: coverForSource(song.src),
 }));
 
 // Exact Songspot snippet durations (seconds)
