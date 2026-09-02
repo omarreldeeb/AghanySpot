@@ -7,6 +7,8 @@
     "dev": "vite",
     "dev:host": "vite --host",
     "build": "vite build && node scripts/cache-bust.mjs",
+    "trim-silence": "node scripts/trim-leading-silence.mjs",
+    "trim-silence:dry": "node scripts/trim-leading-silence.mjs --dry-run",
     "lint": "eslint .",
     "preview": "vite preview"
   },
