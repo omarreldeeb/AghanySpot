@@ -306,6 +306,18 @@ export const EGYPTIAN_SONGS = [
     cover: assetPath('Songs/Covers/Kalemeny Belel - Marwan Moussa.jpg'),
     accent: '#8b5cf6',
   },
+  {
+    id: 26,
+    title: 'Men Gheir Kalam',
+    artist: 'Tul8te',
+    arabicTitle: 'من غير كلام',
+    arabicArtist: 'توليت',
+    era: '2020s',
+    difficulty: 'Medium',
+    src: songSrc('Men Gheir Kalam - Tul8te.mp3'),
+    cover: assetPath('Songs/Covers/Men Gheir Kalam - Tul8te.jpg'),
+    accent: '#e879f9',
+  },
 ];
 
 // Exact Songspot snippet durations (seconds)
