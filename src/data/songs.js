@@ -294,6 +294,18 @@ export const EGYPTIAN_SONGS = [
     cover: assetPath('Songs/Covers/Seneen - Tul8te.jpg'),
     accent: '#f59e0b',
   },
+  {
+    id: 25,
+    title: 'Kalemeny Belel',
+    artist: 'Marwan Moussa ft. Lege-Cy',
+    arabicTitle: 'كلميني بالليل',
+    arabicArtist: 'مروان موسى و ليجي-سي',
+    era: '2020s',
+    difficulty: 'Hard',
+    src: songSrc('Kalemeny Belel - Marwan Moussa.mp3'),
+    cover: assetPath('Songs/Covers/Kalemeny Belel - Marwan Moussa.jpg'),
+    accent: '#8b5cf6',
+  },
 ];
 
 // Exact Songspot snippet durations (seconds)

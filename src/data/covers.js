@@ -27,6 +27,7 @@ export const COVERS = [
   assetPath('Songs/Covers/Tamaly maak.jpeg'),
   assetPath('Songs/Covers/Yalmidan.jpeg'),
   assetPath('Songs/Covers/Seneen - Tul8te.jpg'),
+  assetPath('Songs/Covers/Kalemeny Belel - Marwan Moussa.jpg'),
 ];
 
 // Normalize a name for fuzzy matching. Keep letters and numbers across scripts.
