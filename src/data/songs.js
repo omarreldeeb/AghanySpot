@@ -5,7 +5,39 @@ const assetPath = (path) =>
   `${import.meta.env.BASE_URL}${path.split('/').map(encodeURIComponent).join('/')}`;
 const songSrc = (filename) => assetPath(`Songs/${filename}`);
 
-export const EGYPTIAN_SONGS = [
+const formatDisplayText = (value) => {
+  if (typeof value !== 'string') return value;
+
+  return value
+    .replace(/[_/]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([0-9])([A-Za-z])/g, '$1 $2')
+    .replace(/([A-Za-z])([0-9])/g, '$1 $2')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => {
+      if (!word) return word;
+
+      const hyphenParts = word.split(/(-)/);
+      return hyphenParts
+        .map((part) => {
+          if (!part || part === '-') return part;
+          const hasLetters = /[A-Za-z]/.test(part);
+          if (!hasLetters) return part;
+
+          if (part === part.toUpperCase() && part !== part.toLowerCase()) {
+            return part;
+          }
+
+          return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+        })
+        .join('');
+    })
+    .join(' ');
+};
+
+const RAW_SONGS = [
   {
     id: 1,
     title: 'ركبت الخصومه Hamo el morshedy',
@@ -1243,6 +1275,12 @@ export const EGYPTIAN_SONGS = [
     accent: '#d946ef',
   },
 ];
+
+export const EGYPTIAN_SONGS = RAW_SONGS.map((song) => ({
+  ...song,
+  title: formatDisplayText(song.title),
+  artist: formatDisplayText(song.artist),
+}));
 
 // Exact Songspot snippet durations (seconds)
 export const CLIP_DURATIONS = [0.06, 0.35, 1.5, 8, 15];
