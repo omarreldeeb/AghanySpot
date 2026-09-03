@@ -1510,7 +1510,6 @@ export default function App() {
                 playbackId={playbackId}
                 loopEnabled={loopEnabled}
                 onLoopToggle={handleLoopToggle}
-                onUiClick={playUiClick}
               />
 
               <GuessHistory guesses={guesses} />
@@ -1523,7 +1522,6 @@ export default function App() {
                   onReplayFull={gameStatus === 'LOST' ? playFull : resumeFull}
                   onPause={pause}
                   isPlaying={isPlaying}
-                  onUiClick={playUiClick}
                 />
               )}
 
@@ -1536,7 +1534,6 @@ export default function App() {
                   onQueryChange={setQuery}
                   onSelect={submitGuess}
                   onSkip={handleSkip}
-                  onUiClick={playUiClick}
                 />
               )}
             </div>
