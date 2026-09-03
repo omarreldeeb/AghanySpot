@@ -163,7 +163,7 @@ const DISPLAY_METADATA = {
   1: ['Rakabt El Khosoma', 'Hamo El Morshedy'],
   2: ['Tamaly Maak', 'Amr Diab'],
   4: ['3 Daqat', 'Abu'],
-  84: ['Mel Awal By 3askalany', '3askalany'],
+  84: ['Mel Awal', '3askalany'],
 };
 
 const formatDisplayText = (value) => {
@@ -1191,7 +1191,7 @@ const RAW_SONGS = [
   },
   {
     id: 84,
-    title: 'Mel Awal By 3askalany',
+    title: 'Mel Awal',
     artist: '3askalany',
     arabicTitle: 'من الأول',
     arabicArtist: 'عسقلاني',
