@@ -207,7 +207,7 @@ const RAW_SONGS = [
   },
   {
     id: 2,
-    title: '02.Tamally_Maak',
+    title: 'Tamally_Maak',
     artist: 'Amr Diab',
     arabicTitle: '02.Tamally_Maak',
     arabicArtist: 'عمرو دياب',
