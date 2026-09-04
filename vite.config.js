@@ -19,6 +19,8 @@ function serveSongsMiddleware(dir) {
       return
     }
 
+    if (!file.toLowerCase().endsWith('.mp3')) return next()
+
     fs.stat(file, (err, stat) => {
       if (err || !stat.isFile()) return next()
 

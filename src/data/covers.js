@@ -2,6 +2,12 @@
 const assetPath = (path) =>
   `${import.meta.env.BASE_URL}${path.split('/').map(encodeURIComponent).join('/')}`;
 
+const importedCoverUrls = import.meta.glob('../../Songs/Covers/*.{jpg,jpeg,png,webp}', {
+  eager: true,
+  import: 'default',
+  query: '?url',
+});
+
 export const COVERS = [
   assetPath('Songs/Covers/Dary Ya Alby - Hamza Namira.jpg'),
   assetPath('Songs/Covers/We Ghalawatek - Amr Diab.jpg'),
@@ -48,6 +54,7 @@ export const COVERS = [
   assetPath('Songs/Covers/Ma3aya - Bahaa Sultan.jpg'),
   assetPath('Songs/Covers/Sahby Ya Sahby - Bahaa Sultan.jpg'),
   assetPath('Songs/Covers/Do You Love Me Senorita - Saint Levant ft. Fares Sokar.jpg'),
+  ...Object.values(importedCoverUrls),
 ];
 
 // Normalize a name for fuzzy matching. Keep letters and numbers across scripts.

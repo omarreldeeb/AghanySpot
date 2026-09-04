@@ -38,6 +38,10 @@ export default function GameResult({ status, song, onNext, onReplayFull, onPause
           return;
         }
       }
+      if (song.hasCatalogCover) {
+        setCover(null);
+        return;
+      }
       for (const c of exactCandidates) {
         const ok = await tryLoad(c);
         if (ok) {

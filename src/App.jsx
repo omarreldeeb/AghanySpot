@@ -872,7 +872,7 @@ export default function App() {
 
   const eraOptions = useMemo(() => {
     const set = new Set(EGYPTIAN_SONGS.map((s) => s.era));
-    return ['Any era', ...Array.from(set)];
+    return ['Any era', ...Array.from(set).filter((era) => era !== '1990s')];
   }, []);
 
   const singerOptions = useMemo(() => {

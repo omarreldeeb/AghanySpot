@@ -1,6 +1,7 @@
 // NOTE: When adding songs, please verify the correct English and Arabic
 // spellings (title and artist) and punctuation. Fill `arabicTitle` and
 // `arabicArtist` for every entry so the UI shows accurate metadata.
+import { CATALOG_SONGS } from './catalogSongs';
 import { MANUAL_SONGS, normalizeArtistName } from './manualSongs';
 
 const assetPath = (path) =>
@@ -1434,6 +1435,10 @@ const CURRENT_SONGS = RAW_SONGS.map((song, index) => ({
 export const EGYPTIAN_SONGS = [
   ...CURRENT_SONGS,
   ...MANUAL_SONGS.map((song, index) => ({ ...song, addedOrder: CURRENT_SONGS.length + index + 1 })),
+  ...CATALOG_SONGS.map((song, index) => ({
+    ...song,
+    addedOrder: CURRENT_SONGS.length + MANUAL_SONGS.length + index + 1,
+  })),
 ];
 
 // Exact Songspot snippet durations (seconds)
