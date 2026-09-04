@@ -94,6 +94,8 @@ const ARABIC_ARTISTS = [
 ];
 
 const ERA_OVERRIDES = {
+  Medley: '2020s',
+  Narein: '2020s',
   'Ana Ghaltan': '2020s',
   'Saleny': '2020s',
   'Habibi Ana Men Gherak': '2020s',
@@ -162,10 +164,22 @@ const ERA_OVERRIDES = {
 const TITLE_OVERRIDES = {
   'Ana Bahebak (Al Ahly Sabbour Ramadan 2026)': 'Ana Bahebak',
   'Hena Masr Hafdal Kol Mara Ageelak': 'Hana Masr Hafdal Kol Mara Ajilak',
+  'Medley Tamer Ashour': 'Medley',
+  Narein: 'Narein',
 };
 
 const ARTIST_OVERRIDES = {
   'Hena Masr Hafdal Kol Mara Ageelak': 'Mahmoud El Esseily & Bahaa Sultan',
+  'Medley Tamer Ashour': 'Tamer Ashour',
+};
+
+const ARABIC_TITLE_OVERRIDES = {
+  'Medley Tamer Ashour': 'ميدلي',
+  Narein: 'نارين',
+};
+
+const ARABIC_ARTIST_OVERRIDES = {
+  'Medley Tamer Ashour': 'تامر عاشور',
 };
 
 const difficultyPattern = / (easy|medium|hard|expert|impossible) (\d{4}s)$/i;
@@ -209,8 +223,8 @@ const parseManualSong = (filename, index) => {
     id: index + 103,
     title: TITLE_OVERRIDES[title] || titleCase(title),
     artist: ARTIST_OVERRIDES[title] || artist,
-    arabicTitle,
-    arabicArtist,
+    arabicTitle: ARABIC_TITLE_OVERRIDES[title] || arabicTitle,
+    arabicArtist: ARABIC_ARTIST_OVERRIDES[title] || arabicArtist,
     era: ERA_OVERRIDES[TITLE_OVERRIDES[title] || title] || era,
     difficulty,
     src: assetPath(`Songs/${filename}`),

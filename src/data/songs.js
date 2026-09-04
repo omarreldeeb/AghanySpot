@@ -142,7 +142,7 @@ const ARABIC_METADATA = {
   86: ['مسافر', 'أبو وأحمد عدوية'],
   87: ['مثقف سايح', 'حسين'],
   88: ['مش أول مرة', 'ليجي سي'],
-  89: ['نارين بي توليت', 'توليت'],
+  89: ['نارين', 'توليت'],
   90: ['ناسي', 'تومي جن'],
   91: ['نسرح في زمان', 'حميد الشاعري'],
   92: ['بلاسيبو', 'ليجي سي'],
@@ -164,6 +164,7 @@ const DISPLAY_METADATA = {
   2: ['Tamaly Maak', 'Amr Diab'],
   4: ['3 Daqat', 'Abu'],
   84: ['Mel Awal', '3askalany'],
+  89: ['Narein', 'Tul8te'],
 };
 
 const formatDisplayText = (value) => {
@@ -1239,9 +1240,9 @@ const RAW_SONGS = [
   },
   {
     id: 89,
-    title: 'Narein By Tul8te',
+    title: 'Narein',
     artist: 'Tul8te',
-    arabicTitle: 'نارين بي توليت',
+    arabicTitle: 'نارين',
     arabicArtist: 'توليت',
     era: '2020s',
     difficulty: 'Easy',
