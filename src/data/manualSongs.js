@@ -184,6 +184,29 @@ const ARABIC_ARTIST_OVERRIDES = {
   'Medley Tamer Ashour': 'تامر عاشور',
 };
 
+const ARTIST_ALIASES = new Map([
+  ['omar keif kkkk', 'Omar Keif'],
+  ['marawan moussa', 'Marwan Moussa'],
+  ['marwan moussa', 'Marwan Moussa'],
+  ['hussain al jassmi', 'Hussain El Jasmi'],
+  ['hussain el jasmi', 'Hussain El Jasmi'],
+  ['hamid al shaeri', 'Hamid El Shaari'],
+  ['hamid el shaari', 'Hamid El Shaari'],
+]);
+
+export const normalizeArtistName = (artist = '') => artist
+  .replace(/\bOmar Keif KKKK\b/gi, 'Omar Keif')
+  .replace(/\bMarawan Moussa\b/gi, 'Marwan Moussa')
+  .replace(/\bHussain Al Jassmi\b/gi, 'Hussain El Jasmi')
+  .replace(/\bHamid Al Shaeri\b/gi, 'Hamid El Shaari')
+  .replace(/\bLegecy\b/gi, 'Lege-Cy')
+  .replace(/\s+/g, ' ')
+  .trim()
+  .replace(/^(.*)$/i, (value) => {
+    const alias = ARTIST_ALIASES.get(value.toLowerCase());
+    return alias || value;
+  });
+
 const difficultyPattern = / (easy|medium|hard|expert|impossible) (\d{4}s)$/i;
 const firstArabicCharacter = /[\u0600-\u06ff]/;
 
@@ -224,7 +247,7 @@ const parseManualSong = (filename, index) => {
   return {
     id: index + 103,
     title: TITLE_OVERRIDES[title] || titleCase(title),
-    artist: ARTIST_OVERRIDES[title] || artist,
+    artist: normalizeArtistName(ARTIST_OVERRIDES[title] || artist),
     arabicTitle: ARABIC_TITLE_OVERRIDES[title] || arabicTitle,
     arabicArtist: ARABIC_ARTIST_OVERRIDES[title] || arabicArtist,
     era: ERA_OVERRIDES[TITLE_OVERRIDES[title] || title] || era,

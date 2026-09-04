@@ -1,7 +1,7 @@
 // NOTE: When adding songs, please verify the correct English and Arabic
 // spellings (title and artist) and punctuation. Fill `arabicTitle` and
 // `arabicArtist` for every entry so the UI shows accurate metadata.
-import { MANUAL_SONGS } from './manualSongs';
+import { MANUAL_SONGS, normalizeArtistName } from './manualSongs';
 
 const assetPath = (path) =>
   `${import.meta.env.BASE_URL}${path.split('/').map(encodeURIComponent).join('/')}`;
@@ -1423,14 +1423,18 @@ const RAW_SONGS = [
 const CURRENT_SONGS = RAW_SONGS.map((song, index) => ({
   ...song,
   id: index + 1,
+  addedOrder: index + 1,
   title: DISPLAY_METADATA[song.id]?.[0] || formatDisplayText(song.title),
-  artist: DISPLAY_METADATA[song.id]?.[1] || formatDisplayText(song.artist),
+  artist: normalizeArtistName(DISPLAY_METADATA[song.id]?.[1] || formatDisplayText(song.artist)),
   arabicTitle: ARABIC_METADATA[song.id]?.[0] || formatDisplayText(song.arabicTitle),
   arabicArtist: ARABIC_METADATA[song.id]?.[1] || formatDisplayText(song.arabicArtist),
   cover: coverForSource(song.src),
 }));
 
-export const EGYPTIAN_SONGS = [...CURRENT_SONGS, ...MANUAL_SONGS];
+export const EGYPTIAN_SONGS = [
+  ...CURRENT_SONGS,
+  ...MANUAL_SONGS.map((song, index) => ({ ...song, addedOrder: CURRENT_SONGS.length + index + 1 })),
+];
 
 // Exact Songspot snippet durations (seconds)
 export const CLIP_DURATIONS = [0.06, 0.35, 1.5, 8, 15];

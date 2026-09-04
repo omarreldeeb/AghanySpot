@@ -182,6 +182,19 @@ const ACCENT_COLORS = [
   '#eab308',
 ];
 
+const normalizeSinger = (singer) => singer
+  .trim()
+  .toLowerCase()
+  .replace(/\blegecy\b/g, 'lege-cy')
+  .replace(/\s+/g, ' ');
+
+const getSingerTokens = (artist = '') => artist
+  .split(/\s*(?:&|\band\b|\bft\.?|\bfeat\.?|\bfeaturing\b)\s*/i)
+  .map((singer) => singer.trim())
+  .filter(Boolean);
+
+const singerLabel = (singer) => singer.replace(/^legecy$/i, 'Lege-Cy');
+
 export default function App() {
   const [songIndex, setSongIndex] = useState(() => Math.floor(Math.random() * EGYPTIAN_SONGS.length));
   const [step, setStep] = useState(0);
@@ -191,6 +204,9 @@ export default function App() {
   const [gameStatus, setGameStatus] = useState('PLAYING');
   const [selectedEra, setSelectedEra] = useState('Any era');
   const [selectedDifficulty, setSelectedDifficulty] = useState('Any');
+  const [selectedSingers, setSelectedSingers] = useState([]);
+  const [singerPickerOpen, setSingerPickerOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState('default');
   const [volume, setVolume] = useState(1);
   const [accent, setAccent] = useState(() => ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)]);
   const [loopEnabled, setLoopEnabled] = useState(false);
@@ -237,12 +253,18 @@ export default function App() {
   }, [isDarkMode]);
 
   const filteredSongs = useMemo(() => {
-    return EGYPTIAN_SONGS.filter((s) => {
+    const songs = EGYPTIAN_SONGS.filter((s) => {
       const eraMatch = selectedEra === 'Any era' || s.era === selectedEra;
       const diffMatch = selectedDifficulty === 'Any' || s.difficulty === selectedDifficulty;
-      return eraMatch && diffMatch;
+      const singerMatch = selectedSingers.length === 0
+        || getSingerTokens(s.artist).some((singer) => selectedSingers.includes(normalizeSinger(singer)));
+      return eraMatch && diffMatch && singerMatch;
     });
-  }, [selectedEra, selectedDifficulty]);
+
+    return sortOrder === 'recent'
+      ? songs.sort((a, b) => b.addedOrder - a.addedOrder)
+      : songs;
+  }, [selectedEra, selectedDifficulty, selectedSingers, sortOrder]);
 
   // show a temporary notification when filters produce an empty pool
   const [noMatchVisible, setNoMatchVisible] = useState(false);
@@ -251,7 +273,7 @@ export default function App() {
 
   useEffect(() => {
     // only show when user has selected a constrained filter
-    const userFiltered = selectedEra !== 'Any era' || selectedDifficulty !== 'Any';
+    const userFiltered = selectedEra !== 'Any era' || selectedDifficulty !== 'Any' || selectedSingers.length > 0;
     if (filteredSongs.length === 0 && userFiltered) {
       setNoMatchVisible(true);
       if (noMatchTimer.current) clearTimeout(noMatchTimer.current);
@@ -262,6 +284,7 @@ export default function App() {
       resetFiltersTimer.current = setTimeout(() => {
         setSelectedEra('Any era');
         setSelectedDifficulty('Any');
+        setSelectedSingers([]);
       }, 500);
     }
 
@@ -275,7 +298,7 @@ export default function App() {
         resetFiltersTimer.current = null;
       }
     };
-  }, [filteredSongs.length, selectedEra, selectedDifficulty]);
+  }, [filteredSongs.length, selectedEra, selectedDifficulty, selectedSingers]);
 
   // active pool falls back to full pool if filters empty
   const activePool = useMemo(() => {
@@ -823,7 +846,7 @@ export default function App() {
 
   const resetGame = () => {
     reset();
-    setSongIndex((prev) => randInt(activePool.length, prev));
+    setSongIndex((prev) => sortOrder === 'recent' ? (prev + 1) % activePool.length : randInt(activePool.length, prev));
     setStep(0);
     setGuesses([]);
     setGameStatus('PLAYING');
@@ -841,15 +864,26 @@ export default function App() {
   // When filters change, reset the game and pick a fresh song from the active pool
   useEffect(() => {
     reset();
-    setSongIndex(() => randInt(activePool.length, -1));
+    setSongIndex(() => sortOrder === 'recent' ? 0 : randInt(activePool.length, -1));
     setStep(0);
     setGuesses([]);
     setGameStatus('PLAYING');
-  }, [selectedEra, selectedDifficulty]);
+  }, [selectedEra, selectedDifficulty, selectedSingers, sortOrder]);
 
   const eraOptions = useMemo(() => {
     const set = new Set(EGYPTIAN_SONGS.map((s) => s.era));
     return ['Any era', ...Array.from(set)];
+  }, []);
+
+  const singerOptions = useMemo(() => {
+    const singers = new Map();
+    EGYPTIAN_SONGS.forEach((song) => {
+      getSingerTokens(song.artist).forEach((singer) => {
+        const normalized = normalizeSinger(singer);
+        if (!singers.has(normalized)) singers.set(normalized, singerLabel(singer));
+      });
+    });
+    return ['All singers', ...Array.from(singers.values()).sort((a, b) => a.localeCompare(b))];
   }, []);
 
   const showStandardControls = !is1v1Mode && !challengeSummary;
@@ -1492,6 +1526,82 @@ export default function App() {
                         </button>
                       );
                     })}
+                  </div>
+
+                  <div className="filter-section">
+                    <h4 className="filter-section__title">FILTERS</h4>
+                    <div className="filter-section__controls">
+                      <button
+                        type="button"
+                        className={['filter-toggle', sortOrder === 'recent' && 'filter-toggle--active'].filter(Boolean).join(' ')}
+                        aria-pressed={sortOrder === 'recent'}
+                        onClick={() => {
+                          playUiClick();
+                          setSortOrder((current) => current === 'recent' ? 'default' : 'recent');
+                        }}
+                      >
+                        Recently added
+                        <span className="filter-toggle__detail">Newest first</span>
+                      </button>
+
+                      <div className="filter-picker">
+                        <button
+                          type="button"
+                          className="filter-picker__trigger"
+                          aria-expanded={singerPickerOpen}
+                          aria-controls="singer-filter-menu"
+                          onClick={() => {
+                            playUiClick();
+                            setSingerPickerOpen((open) => !open);
+                          }}
+                        >
+                          <span>Singer</span>
+                          <strong>{selectedSingers.length > 0 ? `${selectedSingers.length} selected` : 'All singers'}</strong>
+                        </button>
+
+                        {singerPickerOpen && (
+                          <div id="singer-filter-menu" className="filter-picker__menu">
+                            <button
+                              type="button"
+                              className={['filter-picker__option', selectedSingers.length === 0 && 'filter-picker__option--active'].filter(Boolean).join(' ')}
+                              onClick={() => {
+                                playUiClick();
+                                setSelectedSingers([]);
+                              }}
+                            >
+                              <span className="filter-picker__check">{selectedSingers.length === 0 ? '✓' : ''}</span>
+                              All singers
+                            </button>
+                            {singerOptions.slice(1).map((singer) => {
+                              const normalizedSinger = normalizeSinger(singer);
+                              const isSelected = selectedSingers.includes(normalizedSinger);
+                              return (
+                                <button
+                                  type="button"
+                                  key={singer}
+                                  className={['filter-picker__option', isSelected && 'filter-picker__option--active'].filter(Boolean).join(' ')}
+                                  onClick={() => {
+                                    playUiClick();
+                                    setSelectedSingers((current) => {
+                                      const next = isSelected
+                                        ? current.filter((value) => value !== normalizedSinger)
+                                        : [...current, normalizedSinger];
+                                      return next.length === singerOptions.length - 1 ? [] : next;
+                                    });
+                                  }}
+                                >
+                                  <span className="filter-picker__check">{isSelected ? '✓' : ''}</span>
+                                  {singer}
+                                </button>
+                              );
+                            })}
+                            <button type="button" className="filter-picker__done" onClick={() => setSingerPickerOpen(false)}>
+                              Done
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
