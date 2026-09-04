@@ -166,6 +166,7 @@ const TITLE_OVERRIDES = {
   'Hena Masr Hafdal Kol Mara Ageelak': 'Hana Masr Hafdal Kol Mara Ajilak',
   'Medley Tamer Ashour': 'Medley',
   Narein: 'Narein',
+  Saleny: 'Saleeny',
 };
 
 const ARTIST_OVERRIDES = {
@@ -176,6 +177,7 @@ const ARTIST_OVERRIDES = {
 const ARABIC_TITLE_OVERRIDES = {
   'Medley Tamer Ashour': 'ميدلي',
   Narein: 'نارين',
+  Saleny: 'ساليني',
 };
 
 const ARABIC_ARTIST_OVERRIDES = {

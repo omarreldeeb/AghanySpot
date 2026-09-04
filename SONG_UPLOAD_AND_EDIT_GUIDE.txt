@@ -1,0 +1,244 @@
+AGHANYSPOT SONG UPLOAD AND EDIT GUIDE
+======================================
+
+This guide explains how to add songs, change song metadata, update covers,
+and deploy the changes to the live website.
+
+PROJECT FOLDERS
+---------------
+
+Songs/
+  Contains the MP3 audio files.
+
+Songs/Covers/
+  Contains the cover images.
+
+src/data/songs.js
+  Contains the original catalog and its metadata.
+
+src/data/manualSongs.js
+  Contains the manually imported catalog. These records are generated from
+  structured filenames listed in MANUAL_FILES.
+
+README.md
+  Contains the short version of the upload instructions.
+
+IMPORTANT RULE
+--------------
+
+The browser cannot read a new file from another folder on your computer.
+Every file must be copied into this project before it can appear on the site.
+
+PART 1: ADD A MANUAL SONG
+-------------------------
+
+1. Put the MP3 file inside:
+
+   Songs/
+
+2. Put the cover image inside:
+
+   Songs/Covers/
+
+3. The cover must have the exact same complete base filename as the MP3.
+   Change only the extension from .mp3 to .jpg.
+
+   Example MP3:
+
+   Songs/Ana Ghaltan by Bahaa Sultan انا غلطان بهاء سلطان easy 2020s.mp3
+
+   Matching cover:
+
+   Songs/Covers/Ana Ghaltan by Bahaa Sultan انا غلطان بهاء سلطان easy 2020s.jpg
+
+4. Open:
+
+   src/data/manualSongs.js
+
+5. Add the exact MP3 filename as a new line inside MANUAL_FILES.
+
+6. Use this filename structure:
+
+   English Title by English Artist Arabic Title Arabic Artist difficulty era.mp3
+
+   Example:
+
+   Ana Ghaltan by Bahaa Sultan انا غلطان بهاء سلطان easy 2020s.mp3
+
+7. The exact separator between the English title and artist is:
+
+   by
+
+   There must be one space before and after it. Do not write the artist as
+   part of the title.
+
+8. Use one of these difficulty values:
+
+   easy
+   medium
+   hard
+   expert
+   impossible
+
+9. Use one of these era values:
+
+   2000s
+   2010s
+   2020s
+
+10. If the filename cannot express a correction, add an override dictionary
+    in manualSongs.js instead of changing the audio filename. Existing
+    dictionaries include:
+
+    TITLE_OVERRIDES
+    ARTIST_OVERRIDES
+    ARABIC_TITLE_OVERRIDES
+    ARABIC_ARTIST_OVERRIDES
+    ERA_OVERRIDES
+
+PART 2: CHANGE A MANUAL SONG
+----------------------------
+
+Manual songs are parsed from their filenames. To change a manual song's
+metadata, use the override dictionaries in src/data/manualSongs.js.
+
+Change the English title:
+
+  Add the original parsed title as the key in TITLE_OVERRIDES.
+
+  Example:
+
+  'Saleny': 'Saleeny',
+
+Change the Arabic title:
+
+  Add the original parsed title as the key in ARABIC_TITLE_OVERRIDES.
+
+  Example:
+
+  Saleny: 'ساليني',
+
+Change the artist:
+
+  Add the original parsed title as the key in ARTIST_OVERRIDES.
+
+Change the Arabic artist:
+
+  Add the original parsed title as the key in ARABIC_ARTIST_OVERRIDES.
+
+Change the difficulty or era:
+
+  Difficulty normally comes from the filename. Change the filename and its
+  matching cover together if the difficulty changes.
+
+  Era can be corrected without renaming files by adding the title to
+  ERA_OVERRIDES.
+
+Do not change a manual MP3 filename by itself. If you rename the MP3, rename
+its matching cover and update MANUAL_FILES too.
+
+PART 3: ADD OR EDIT A NORMAL SONG
+--------------------------------
+
+1. Open:
+
+   src/data/songs.js
+
+2. Find RAW_SONGS.
+
+3. Add or edit one object with these fields:
+
+   {
+     id: 104,
+     title: 'Example Title',
+     artist: 'Example Artist',
+     arabicTitle: 'اسم الأغنية',
+     arabicArtist: 'اسم الفنان',
+     era: '2020s',
+     difficulty: 'Easy',
+     src: songSrc('Example Title - Example Artist.mp3'),
+     cover: assetPath('Songs/Covers/Example Title - Example Artist.jpg'),
+     accent: '#22c55e',
+   }
+
+4. Put the matching MP3 in Songs/.
+
+5. Put the matching cover in Songs/Covers/.
+
+6. Keep title and artist separate. Never write this:
+
+   title: 'Example Title By Example Artist'
+
+   Use this instead:
+
+   title: 'Example Title',
+   artist: 'Example Artist',
+
+The exported catalog renumbers songs sequentially, so do not manually change
+other IDs just because a song was removed. Keep each record's metadata,
+src, and cover together.
+
+PART 4: EDIT A NORMAL SONG
+--------------------------
+
+Edit these fields directly in the matching RAW_SONGS object:
+
+  title
+  artist
+  arabicTitle
+  arabicArtist
+  difficulty
+  era
+
+For a cover change, replace the image at the same cover path. If you rename
+the image, update the cover field too.
+
+For an audio change, replace the MP3 at the same path. Keep the filename the
+same unless you also update the src field.
+
+PART 5: CHECK YOUR WORK
+-----------------------
+
+From the project folder, run:
+
+  npm run build
+
+The build checks that the JavaScript is valid and that the catalog can be
+bundled. A black screen usually means a syntax error or a filename parser
+exception, so always run the build after metadata edits.
+
+Before deploying, check:
+
+  - Every MP3 exists in Songs/.
+  - Every cover exists in Songs/Covers/.
+  - The MP3 and cover have matching base filenames.
+  - The title does not contain the artist name.
+  - Arabic title and Arabic artist are separate.
+  - Difficulty is Easy, Medium, Hard, Expert, or Impossible.
+  - Era is 2000s, 2010s, or 2020s.
+
+PART 6: DEPLOY TO THE WEBSITE
+-----------------------------
+
+After npm run build passes, run:
+
+  git status
+  git add Songs src/data/manualSongs.js src/data/songs.js
+  git add SONG_UPLOAD_AND_EDIT_GUIDE.txt
+  git commit -m "Add or update songs"
+  git push origin main
+
+The GitHub Pages workflow runs after the push. Wait for the workflow to
+finish, then hard-refresh the website if the browser shows an older version.
+
+SAFE WORKFLOW SUMMARY
+---------------------
+
+1. Add the MP3.
+2. Add the matching cover.
+3. Add the filename to MANUAL_FILES, or add a RAW_SONGS object.
+4. Keep title, artist, Arabic title, and Arabic artist separate.
+5. Use overrides for manual-song corrections.
+6. Run npm run build.
+7. Review git status.
+8. Commit and push to main.
