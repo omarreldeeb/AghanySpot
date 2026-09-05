@@ -102,6 +102,19 @@ export function useAudioPlayer(src) {
     [seekToStart, startCutoffLoop, stopCutoffLoop],
   );
 
+  const extendSnippet = useCallback(
+    (step) => {
+      const audio = audioRef.current;
+      if (!audio || audio.paused || limitRef.current == null) return false;
+
+      const duration = CLIP_DURATIONS[step];
+      const playbackDuration = duration <= 0.1 ? SHORT_CLIP_PLAYBACK_DURATION : duration;
+      startCutoffLoop(playbackDuration);
+      return true;
+    },
+    [startCutoffLoop],
+  );
+
   const playFull = useCallback((restart = true) => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -171,6 +184,7 @@ export function useAudioPlayer(src) {
     unlocked,
     playbackId,
     playSnippet,
+    extendSnippet,
     playFull,
     resumeFull,
     setLooping,

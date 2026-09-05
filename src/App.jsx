@@ -202,6 +202,7 @@ export default function App() {
   const [suggestions, setSuggestions] = useState([]);
   const [guesses, setGuesses] = useState([]);
   const [gameStatus, setGameStatus] = useState('PLAYING');
+  const [resultDuration, setResultDuration] = useState(null);
   const [selectedEra, setSelectedEra] = useState('Any era');
   const [selectedDifficulty, setSelectedDifficulty] = useState('Any');
   const [selectedSingers, setSelectedSingers] = useState([]);
@@ -261,9 +262,10 @@ export default function App() {
       return eraMatch && diffMatch && singerMatch;
     });
 
-    return sortOrder === 'recent'
-      ? songs.sort((a, b) => b.addedOrder - a.addedOrder)
-      : songs;
+    if (sortOrder === 'default') return songs;
+    return songs.sort((a, b) => sortOrder === 'newest'
+      ? b.addedOrder - a.addedOrder
+      : a.addedOrder - b.addedOrder);
   }, [selectedEra, selectedDifficulty, selectedSingers, sortOrder]);
 
   // show a temporary notification when filters produce an empty pool
@@ -337,7 +339,7 @@ export default function App() {
 
   const currentSongForView = is1v1Mode ? challengeCurrentSong : currentSong;
 
-  const { audioRef, isPlaying, unlocked, playbackId, playSnippet, playFull, resumeFull, setLooping, pause, unlock, reset } =
+  const { audioRef, isPlaying, unlocked, playbackId, playSnippet, extendSnippet, playFull, resumeFull, setLooping, pause, unlock, reset } =
     useAudioPlayer(currentSongForView?.src);
 
   // keep audio volume in sync
@@ -749,15 +751,15 @@ export default function App() {
     setSuggestions([]);
 
     if (isCorrect) {
+      setResultDuration(CLIP_DURATIONS[step]);
       setGameStatus('WON');
       unlock();
       playFull();
-    } else if (step + 1 >= CLIP_DURATIONS.length) {
+    } else {
+      setResultDuration(CLIP_DURATIONS[step]);
       setGameStatus('LOST');
       unlock();
       playFull();
-    } else {
-      setStep((prev) => prev + 1);
     }
   };
 
@@ -800,18 +802,22 @@ export default function App() {
         return;
       }
 
-      pause();
+      const continued = extendSnippet(step + 1);
+      if (!continued) pause();
       setStep((prev) => prev + 1);
       challengeRoundLocked.current = false;
       return;
     }
 
-    pause();
     if (step + 1 >= CLIP_DURATIONS.length) {
+      pause();
+      setResultDuration(CLIP_DURATIONS[step]);
       setGameStatus('LOST');
       unlock();
       playFull();
     } else {
+      const continued = extendSnippet(step + 1);
+      if (!continued) pause();
       setStep((prev) => prev + 1);
     }
   };
@@ -833,6 +839,7 @@ export default function App() {
     setGameStatus('PLAYING');
     setStep(0);
     setGuesses([]);
+    setResultDuration(null);
     setQuery('');
     setSuggestions([]);
     if (window.location.search) {
@@ -846,9 +853,12 @@ export default function App() {
 
   const resetGame = () => {
     reset();
-    setSongIndex((prev) => sortOrder === 'recent' ? (prev + 1) % activePool.length : randInt(activePool.length, prev));
+    setSongIndex((prev) => sortOrder === 'default'
+      ? randInt(activePool.length, prev)
+      : (prev + 1) % activePool.length);
     setStep(0);
     setGuesses([]);
+    setResultDuration(null);
     setGameStatus('PLAYING');
     setQuery('');
   };
@@ -858,15 +868,17 @@ export default function App() {
     setSongIndex((prev) => randInt(activePool.length, prev));
     setStep(0);
     setGuesses([]);
+    setResultDuration(null);
     setGameStatus('PLAYING');
   };
 
   // When filters change, reset the game and pick a fresh song from the active pool
   useEffect(() => {
     reset();
-    setSongIndex(() => sortOrder === 'recent' ? 0 : randInt(activePool.length, -1));
+    setSongIndex(() => 0);
     setStep(0);
     setGuesses([]);
+    setResultDuration(null);
     setGameStatus('PLAYING');
   }, [selectedEra, selectedDifficulty, selectedSingers, sortOrder]);
 
@@ -1533,15 +1545,22 @@ export default function App() {
                     <div className="filter-section__controls">
                       <button
                         type="button"
-                        className={['filter-toggle', sortOrder === 'recent' && 'filter-toggle--active'].filter(Boolean).join(' ')}
-                        aria-pressed={sortOrder === 'recent'}
+                        className={['filter-toggle', sortOrder !== 'default' && 'filter-toggle--active'].filter(Boolean).join(' ')}
+                        aria-label={sortOrder === 'default' ? 'No recently added filter' : `Sort recently added songs ${sortOrder === 'newest' ? 'oldest to newest' : 'newest to oldest'}`}
+                        aria-pressed={sortOrder !== 'default'}
                         onClick={() => {
                           playUiClick();
-                          setSortOrder((current) => current === 'recent' ? 'default' : 'recent');
+                          setSortOrder((current) => {
+                            if (current === 'default') return 'newest';
+                            if (current === 'newest') return 'oldest';
+                            return 'default';
+                          });
                         }}
                       >
                         Recently added
-                        <span className="filter-toggle__detail">Newest first</span>
+                        <span className="filter-toggle__detail">
+                          {sortOrder === 'default' ? 'No filter' : sortOrder === 'newest' ? 'Newest to Oldest' : 'Oldest to Newest'}
+                        </span>
                       </button>
 
                       <div className="filter-picker">
@@ -1628,6 +1647,7 @@ export default function App() {
                 <GameResult
                   status={gameStatus}
                   song={currentSong}
+                  resultDuration={resultDuration}
                   onNext={resetGame}
                   onReplayFull={gameStatus === 'LOST' ? playFull : resumeFull}
                   onPause={pause}
@@ -1644,6 +1664,7 @@ export default function App() {
                   onQueryChange={setQuery}
                   onSelect={submitGuess}
                   onSkip={handleSkip}
+                  onUiClick={playUiClick}
                 />
               )}
             </div>

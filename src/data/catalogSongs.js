@@ -33,6 +33,7 @@ const stripNoise = (value = '') => value
   .trim();
 
 const cleanEnglishTitle = (value = '', artist = '') => {
+  if (value === 'Etisalat 2024') return 'El Sa3at El Helwa Mabt5lash';
   let title = stripNoise(value).split(/[|｜]/)[0].trim();
   const cleanArtist = stripNoise(artist);
   if (cleanArtist && cleanArtist !== 'Various') {

@@ -188,8 +188,15 @@ const ARTIST_ALIASES = new Map([
   ['omar keif kkkk', 'Omar Keif'],
   ['marawan moussa', 'Marwan Moussa'],
   ['marwan moussa', 'Marwan Moussa'],
-  ['hussain al jassmi', 'Hussain El Jasmi'],
-  ['hussain el jasmi', 'Hussain El Jasmi'],
+  ['hussain al jassmi', 'Hussain AlJassmi'],
+  ['hussain aljassmi', 'Hussain AlJassmi'],
+  ['hussein al jassmi', 'Hussain AlJassmi'],
+  ['hussein aljassmi', 'Hussain AlJassmi'],
+  ['hussain el jasmi', 'Hussain AlJassmi'],
+  ['hussein eljasmi', 'Hussain AlJassmi'],
+  ['حسين الجسمي', 'Hussain AlJassmi'],
+  ['tommy', 'Tommy'],
+  ['tommy gun', 'Tommy'],
   ['hamid al shaeri', 'Hamid El Shaari'],
   ['hamid el shaari', 'Hamid El Shaari'],
 ]);
@@ -197,7 +204,11 @@ const ARTIST_ALIASES = new Map([
 export const normalizeArtistName = (artist = '') => artist
   .replace(/\bOmar Keif KKKK\b/gi, 'Omar Keif')
   .replace(/\bMarawan Moussa\b/gi, 'Marwan Moussa')
-  .replace(/\bHussain Al Jassmi\b/gi, 'Hussain El Jasmi')
+  .replace(/\bHussain Al ?Jassmi\b/gi, 'Hussain AlJassmi')
+  .replace(/\bHussein Al ?Jassmi\b/gi, 'Hussain AlJassmi')
+  .replace(/\bHussain El ?Jasmi\b/gi, 'Hussain AlJassmi')
+  .replace(/حسين الجسمي/g, 'Hussain AlJassmi')
+  .replace(/\bTommy Gun\b/gi, 'Tommy')
   .replace(/\bHamid Al Shaeri\b/gi, 'Hamid El Shaari')
   .replace(/\bLegecy\b/gi, 'Lege-Cy')
   .replace(/\s+/g, ' ')

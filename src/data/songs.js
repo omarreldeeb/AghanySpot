@@ -11,6 +11,7 @@ const songSrc = (filename) => assetPath(`Songs/${filename}`);
 const LEGACY_COVER_FILES = {
   ' ركبت الخصومه Hamo el morshedy.mp3': ' ركبت الخصومه.webp',
   '02.Tamally_Maak.mp3': 'Tamaly maak.jpeg',
+  '02:00 am by legecy impossible 2020s.mp3': '02:00 am by legecy impossible 2020s.webp',
   '3 DAQAT.mp3': '3 DAQAT.jpeg',
   'Adrenalin hamaki.mp3': 'Adrenalina.jpeg',
   'Ahwak - Abdel Halim Hafez.mp3': 'Ahwak - Abdel Halim Hafez.jpeg',
@@ -1429,7 +1430,9 @@ const CURRENT_SONGS = RAW_SONGS.map((song, index) => ({
   artist: normalizeArtistName(DISPLAY_METADATA[song.id]?.[1] || formatDisplayText(song.artist)),
   arabicTitle: ARABIC_METADATA[song.id]?.[0] || formatDisplayText(song.arabicTitle),
   arabicArtist: ARABIC_METADATA[song.id]?.[1] || formatDisplayText(song.arabicArtist),
-  cover: coverForSource(song.src),
+  cover: song.title === '02:00 am'
+    ? assetPath('Songs/Covers/02:00 am by legecy impossible 2020s.webp')
+    : coverForSource(song.src),
 }));
 
 export const EGYPTIAN_SONGS = [
@@ -1437,6 +1440,7 @@ export const EGYPTIAN_SONGS = [
   ...MANUAL_SONGS.map((song, index) => ({ ...song, addedOrder: CURRENT_SONGS.length + index + 1 })),
   ...CATALOG_SONGS.map((song, index) => ({
     ...song,
+    artist: normalizeArtistName(song.artist),
     addedOrder: CURRENT_SONGS.length + MANUAL_SONGS.length + index + 1,
   })),
 ];

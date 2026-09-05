@@ -2,8 +2,15 @@ import { Pause, Play, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { COVERS, normalizeName } from '../data/covers';
 
-export default function GameResult({ status, song, onNext, onReplayFull, onPause, isPlaying, onUiClick }) {
+export default function GameResult({ status, song, resultDuration, onNext, onReplayFull, onPause, isPlaying, onUiClick }) {
   const won = status === 'WON';
+  const durationLabel = {
+    0.06: '0.1',
+    0.35: '0.5',
+    1.5: '2',
+    8: '8',
+    15: '15',
+  }[resultDuration] || String(resultDuration ?? '');
   const [cover, setCover] = useState(null);
 
   useEffect(() => {
@@ -111,6 +118,9 @@ export default function GameResult({ status, song, onNext, onReplayFull, onPause
   return (
     <div className={`game-result-modal`} role="dialog" aria-modal="true">
       <div className={`game-result-card ${won ? 'game-result--won' : 'game-result--lost'}`}>
+        <div className="game-result-banner" role="status" aria-live="polite">
+          {won ? 'GUESSED IN' : 'LOST AT'} <strong>{durationLabel}S</strong>
+        </div>
         <div className="game-result-media">
           {cover ? (
             <img src={cover} alt={`${song.title} cover`} className="game-result-cover" />
